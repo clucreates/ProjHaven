@@ -1,0 +1,3027 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="icon" href="data:," />
+    <title>Haven Playable Prototype</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;800&family=Barlow+Semi+Condensed:wght@600;700&display=swap" rel="stylesheet" />
+    <style>
+      :root {
+        --bg: #edf1f6;
+        --surface: #ffffff;
+        --surface-2: #e2eaf2;
+        --surface-3: #d3dfea;
+        --ink: #152434;
+        --ink-soft: #33475c;
+        --muted: #5d7185;
+        --line: #c3d2e0;
+        --line-strong: #9db2c6;
+        --accent: #2f6db3;
+        --accent-deep: #1f4e82;
+        --accent-soft: #d7e7f7;
+        --cyan: #1d97ad;
+        --good: #2e8b6e;
+        --good-soft: #d5ecdf;
+        --danger: #b4503f;
+        --danger-soft: #f6ded8;
+        --gold: #b07d2b;
+        --role-tank: #4b7fb8;
+        --role-damage: #b4503f;
+        --role-support: #2e8b6e;
+        --arena-1: #0e1a28;
+        --arena-2: #1b2f45;
+        --shadow: 0 2px 10px rgba(21, 36, 52, .10), 0 1px 3px rgba(21, 36, 52, .08);
+        --shadow-lg: 0 10px 30px rgba(21, 36, 52, .18);
+        --radius: 14px;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #0b121c;
+          --surface: #15222f;
+          --surface-2: #1c2d3f;
+          --surface-3: #24384f;
+          --ink: #e7eff7;
+          --ink-soft: #c2d2e2;
+          --muted: #8ea4b9;
+          --line: #2a405a;
+          --line-strong: #3d5a78;
+          --accent: #5b97d6;
+          --accent-deep: #8dbcdf;
+          --accent-soft: #1d3550;
+          --cyan: #3fc3d8;
+          --good: #4cc393;
+          --good-soft: #17382c;
+          --danger: #e0785f;
+          --danger-soft: #402218;
+          --gold: #d9a648;
+          --role-tank: #6b9fd4;
+          --role-damage: #e0785f;
+          --role-support: #4cc393;
+          --shadow: 0 2px 10px rgba(0, 0, 0, .35);
+          --shadow-lg: 0 10px 30px rgba(0, 0, 0, .5);
+        }
+      }
+      * { box-sizing: border-box; }
+      html { -webkit-text-size-adjust: 100%; }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font-family: "Barlow", "Segoe UI", system-ui, -apple-system, sans-serif;
+        font-size: 16px;
+        line-height: 1.45;
+      }
+      button { font: inherit; cursor: pointer; }
+      .wrap { max-width: 1080px; margin: 0 auto; padding: 18px 16px 120px; }
+      h1, h2, h3 { font-family: "Barlow Semi Condensed", "Barlow", sans-serif; letter-spacing: .01em; margin: 0; }
+      .screen { display: none; }
+      .screen.active { display: block; animation: screenIn .28s ease both; }
+      @keyframes screenIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+      /* ---------- top strip ---------- */
+      .topstrip {
+        display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between;
+        margin-bottom: 14px;
+      }
+      .brandline { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+      .brandline .game-name {
+        font-family: "Barlow Semi Condensed", sans-serif; font-weight: 700; font-size: 1.35rem;
+        text-transform: uppercase; letter-spacing: .12em; color: var(--accent-deep);
+      }
+      .brandline .tag { color: var(--muted); font-size: .9rem; }
+      .token-chip {
+        display: inline-flex; align-items: center; gap: 7px;
+        background: var(--surface); border: 1px solid var(--line); border-radius: 999px;
+        padding: 5px 12px 5px 8px; font-weight: 700; box-shadow: var(--shadow);
+      }
+      .token-chip .coin {
+        width: 20px; height: 20px; border-radius: 50%;
+        background: radial-gradient(circle at 35% 30%, #f3cd7e, var(--gold) 70%);
+        display: inline-block;
+      }
+      .token-chip small { color: var(--muted); font-weight: 600; }
+
+      /* ---------- draft ---------- */
+      .intro {
+        background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+        padding: 16px 18px; box-shadow: var(--shadow); margin-bottom: 16px;
+      }
+      .intro h1 { font-size: 1.7rem; margin-bottom: 4px; }
+      .intro p { margin: 0; color: var(--ink-soft); max-width: 62ch; }
+      .intro p strong { color: var(--ink); }
+
+      .panel {
+        background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+        box-shadow: var(--shadow); padding: 14px 16px; margin-bottom: 16px;
+      }
+      .panel h2 { font-size: 1.05rem; text-transform: uppercase; letter-spacing: .08em; color: var(--ink-soft); margin-bottom: 8px; }
+      .panel .hint { color: var(--muted); font-size: .9rem; margin: 0 0 10px; }
+
+      .mutator-row { display: flex; flex-wrap: wrap; gap: 10px; }
+      .mutator {
+        flex: 1 1 260px; text-align: left; display: flex; gap: 12px; align-items: flex-start;
+        background: var(--surface-2); border: 2px solid var(--line); border-radius: 12px; padding: 12px 14px;
+        color: var(--ink); transition: border-color .15s, background .15s;
+      }
+      .mutator .mt-name { font-weight: 700; display: block; }
+      .mutator .mt-desc { color: var(--muted); font-size: .88rem; display: block; margin-top: 2px; }
+      .mutator .mt-state {
+        margin-left: auto; flex: none; font-size: .72rem; font-weight: 800; letter-spacing: .08em;
+        padding: 3px 8px; border-radius: 999px; background: var(--surface-3); color: var(--muted);
+      }
+      .mutator.on { border-color: var(--cyan); background: var(--accent-soft); }
+      .mutator.on .mt-state { background: var(--cyan); color: #fff; }
+
+      .role-head {
+        display: flex; align-items: center; gap: 10px; margin: 20px 0 10px;
+      }
+      .role-head:first-of-type { margin-top: 4px; }
+      .role-dot { width: 12px; height: 12px; border-radius: 3px; flex: none; }
+      .role-head h2 { font-size: 1.15rem; text-transform: uppercase; letter-spacing: .07em; }
+      .role-head .role-note { color: var(--muted); font-size: .88rem; }
+      .role-head .role-count { margin-left: auto; font-weight: 700; color: var(--muted); font-size: .9rem; }
+
+      .hero-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; }
+      .hero-card {
+        position: relative; text-align: left; width: 100%;
+        background: var(--surface); border: 2px solid var(--line); border-radius: var(--radius);
+        padding: 13px 14px 12px; color: var(--ink); box-shadow: var(--shadow);
+        transition: border-color .15s, transform .15s, box-shadow .15s;
+      }
+      .hero-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+      .hero-card.selected { border-color: var(--accent); background: var(--accent-soft); }
+      .hero-card.dim { opacity: .55; }
+      .hero-top { display: flex; align-items: center; gap: 11px; margin-bottom: 9px; }
+      .avatar {
+        width: 52px; height: 52px; border-radius: 50%; flex: none; position: relative;
+        display: grid; place-items: center; color: #fff;
+        box-shadow: inset 0 -8px 14px rgba(0,0,0,.22), inset 0 4px 8px rgba(255,255,255,.25);
+      }
+      .avatar svg { width: 27px; height: 27px; }
+      .avatar.tank { background: radial-gradient(circle at 32% 28%, #7ba9d4, var(--role-tank) 72%); }
+      .avatar.damage { background: radial-gradient(circle at 32% 28%, #d98a76, var(--role-damage) 72%); }
+      .avatar.support { background: radial-gradient(circle at 32% 28%, #6fceaa, var(--role-support) 72%); }
+      .hero-name { font-weight: 800; font-size: 1.06rem; line-height: 1.15; }
+      .hero-role { font-size: .74rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
+      .hero-role.tank { color: var(--role-tank); } .hero-role.damage { color: var(--role-damage); } .hero-role.support { color: var(--role-support); }
+      .pick-badge {
+        position: absolute; top: 10px; right: 10px; width: 24px; height: 24px; border-radius: 50%;
+        background: var(--accent); color: #fff; display: none; place-items: center; font-weight: 800; font-size: .85rem;
+      }
+      .hero-card.selected .pick-badge { display: grid; }
+      .stat-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 9px; }
+      .stat {
+        background: var(--surface-2); border-radius: 8px; padding: 4px 2px; text-align: center;
+      }
+      .stat b { display: block; font-size: .98rem; font-variant-numeric: tabular-nums; line-height: 1.1; }
+      .stat span { font-size: .64rem; font-weight: 700; letter-spacing: .09em; color: var(--muted); text-transform: uppercase; }
+      .ability { font-size: .88rem; color: var(--ink-soft); }
+      .ability b { color: var(--ink); }
+      .ability .cd { color: var(--muted); font-weight: 600; white-space: nowrap; }
+
+      /* sticky squad bar */
+      .squadbar {
+        position: fixed; left: 0; right: 0; bottom: 0; z-index: 40;
+        background: var(--surface); border-top: 1px solid var(--line-strong);
+        box-shadow: 0 -6px 24px rgba(21, 36, 52, .14);
+        padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
+      }
+      .squadbar-inner { max-width: 1080px; margin: 0 auto; display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
+      .slots { display: flex; gap: 7px; }
+      .slot {
+        width: 46px; height: 46px; border-radius: 50%; border: 2px dashed var(--line-strong);
+        display: grid; place-items: center; color: var(--muted); font-weight: 800; background: var(--surface-2);
+        overflow: hidden; flex: none;
+      }
+      .slot.filled { border-style: solid; color: #fff; }
+      .slot.filled svg { width: 24px; height: 24px; }
+      .slot.tank { background: var(--role-tank); border-color: var(--role-tank); }
+      .slot.damage { background: var(--role-damage); border-color: var(--role-damage); }
+      .slot.support { background: var(--role-support); border-color: var(--role-support); }
+      .squad-meta { flex: 1 1 220px; min-width: 180px; }
+      .squad-status { font-weight: 700; font-size: .95rem; }
+      .squad-status.invalid { color: var(--danger); }
+      .squad-status.valid { color: var(--good); }
+      .synergy-list { display: grid; gap: 2px; }
+      .syn-row {
+        display: flex; gap: 10px; align-items: baseline; padding: 7px 2px;
+        border-bottom: 1px dashed var(--line); opacity: .55;
+      }
+      .syn-row:last-child { border-bottom: 0; }
+      .syn-row .syn-state { font-weight: 800; color: var(--muted); flex: none; width: 18px; text-align: center; }
+      .syn-row .syn-name { font-weight: 800; }
+      .syn-row .syn-desc { color: var(--muted); font-size: .9rem; }
+      .syn-row.on { opacity: 1; }
+      .syn-row.on .syn-state { color: var(--good); }
+      .syn-row.on .syn-name { color: var(--good); }
+      .bar-actions { display: flex; gap: 8px; flex: none; }
+
+      .btn {
+        border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink);
+        border-radius: 10px; padding: 10px 18px; font-weight: 700; transition: filter .12s, transform .12s, background .12s;
+      }
+      .btn:hover { filter: brightness(1.05); }
+      .btn:active { transform: translateY(1px); }
+      .btn.primary { background: var(--accent); border-color: var(--accent-deep); color: #fff; font-size: 1.02rem; padding: 11px 24px; }
+      .btn.primary:disabled { background: var(--surface-3); border-color: var(--line); color: var(--muted); cursor: not-allowed; transform: none; }
+      .btn.ghost { background: transparent; }
+      .btn.small { padding: 6px 12px; font-size: .88rem; }
+      .btn.danger-ghost { color: var(--danger); border-color: var(--danger); background: transparent; }
+
+      /* ---------- battle ---------- */
+      .battle-head { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+      .battle-head h1 { font-size: 1.55rem; }
+      .battle-controls { display: flex; gap: 6px; flex-wrap: wrap; }
+      .speed-group { display: inline-flex; border: 1px solid var(--line-strong); border-radius: 10px; overflow: hidden; }
+      .speed-group button { border: 0; background: var(--surface); color: var(--muted); padding: 8px 13px; font-weight: 800; }
+      .speed-group button.on { background: var(--accent); color: #fff; }
+
+      .arena {
+        position: relative; border-radius: 18px; overflow: hidden;
+        background:
+          radial-gradient(ellipse 90% 55% at 50% -10%, rgba(91, 151, 214, .28), transparent 60%),
+          radial-gradient(ellipse 70% 40% at 50% 115%, rgba(29, 151, 173, .16), transparent 60%),
+          linear-gradient(180deg, var(--arena-2), var(--arena-1));
+        border: 1px solid #33506e;
+        padding: 20px 14px 18px; color: #e7eff7;
+        box-shadow: var(--shadow-lg);
+      }
+      .arena::after {
+        content: ""; position: absolute; left: 8%; right: 8%; top: 56%; height: 1px;
+        background: linear-gradient(90deg, transparent, rgba(160, 195, 230, .35), transparent);
+        pointer-events: none;
+      }
+      .enemy-zone { display: flex; flex-direction: column; align-items: center; gap: 12px; min-height: 218px; justify-content: flex-start; }
+      .adds-row { display: flex; gap: 26px; min-height: 86px; align-items: flex-start; justify-content: center; }
+      .party-zone { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 22px; }
+
+      .unit { position: relative; display: flex; flex-direction: column; align-items: center; width: 118px; text-align: center; }
+      .unit .token {
+        position: relative; border-radius: 50%; display: grid; place-items: center; color: #fff;
+        box-shadow: inset 0 -10px 18px rgba(0,0,0,.35), inset 0 6px 10px rgba(255,255,255,.22), 0 8px 18px rgba(0,0,0,.4);
+        transition: transform .18s ease, filter .15s;
+      }
+      .unit .token svg { width: 55%; height: 55%; }
+      .unit.hero .token { width: 62px; height: 62px; border: 3px solid rgba(255,255,255,.25); }
+      .unit.hero .token.tank { background: radial-gradient(circle at 32% 28%, #7ba9d4, #3d6ea6 75%); }
+      .unit.hero .token.damage { background: radial-gradient(circle at 32% 28%, #d98a76, #a03e2c 75%); }
+      .unit.hero .token.support { background: radial-gradient(circle at 32% 28%, #6fceaa, #22795a 75%); }
+      .unit.boss .token { width: 118px; height: 118px; border: 3px solid rgba(224, 120, 95, .55); background: radial-gradient(circle at 34% 26%, #5d7ea6, #22364e 55%, #141f2e 100%); }
+      .unit.thrall .token { width: 46px; height: 46px; border: 2px solid rgba(255,255,255,.2); background: radial-gradient(circle at 32% 28%, #71879c, #3c4f63 75%); }
+      .unit .u-name { font-weight: 700; font-size: .86rem; margin-top: 7px; line-height: 1.15; text-shadow: 0 1px 3px rgba(0,0,0,.6); }
+      .unit.boss .u-name { font-size: 1.05rem; letter-spacing: .04em; }
+      .unit .u-sub { font-size: .7rem; color: #a9c2da; font-weight: 600; min-height: 1em; }
+      .hpbar { width: 100%; max-width: 108px; height: 9px; border-radius: 99px; background: rgba(255,255,255,.16); margin-top: 5px; overflow: hidden; position: relative; }
+      .unit.boss .hpbar { max-width: 210px; height: 12px; }
+      .hpfill { height: 100%; border-radius: 99px; background: linear-gradient(90deg, #3fae7f, #57c78f); transition: width .3s ease; }
+      .unit.enemy .hpfill { background: linear-gradient(90deg, #c4503c, #e0785f); }
+      .shieldfill { position: absolute; inset: 0 auto 0 0; background: rgba(140, 190, 240, .85); border-radius: 99px; transition: width .3s ease; }
+      .hptext { font-size: .72rem; font-weight: 700; color: #c8dcee; font-variant-numeric: tabular-nums; margin-top: 2px; }
+      .unit .badges { position: absolute; top: -6px; right: 2px; display: flex; flex-direction: column; gap: 3px; align-items: flex-end; }
+      .badge {
+        font-size: .62rem; font-weight: 800; letter-spacing: .05em; padding: 1px 6px; border-radius: 99px;
+        background: rgba(10, 20, 32, .75); border: 1px solid rgba(255,255,255,.3); color: #cfe4f7;
+      }
+      .badge.taunt { border-color: #e0a05f; color: #f3cd7e; }
+      .badge.buff { border-color: var(--cyan); color: #9fe6f2; }
+      .badge.cd { border-color: rgba(255,255,255,.35); color: #a9c2da; }
+      .unit.dead { opacity: .38; filter: grayscale(.7); }
+      .unit.dead .token { transform: rotate(-8deg) scale(.92); }
+      .unit.acting .token { transform: translateY(-7px) scale(1.07); filter: brightness(1.25); }
+      .unit.hit .token { animation: hitShake .3s ease; }
+      .unit.lunge .token { animation: lunge .3s ease; }
+      @keyframes hitShake { 0%,100% { transform: none; } 25% { transform: translateX(-5px); } 60% { transform: translateX(4px); } }
+      @keyframes lunge { 0% { transform: none; } 40% { transform: translateY(-12px) scale(1.1); } 100% { transform: none; } }
+
+      .phase-pips { display: flex; gap: 5px; justify-content: center; margin-bottom: 2px; }
+      .phase-pips i { width: 34px; height: 5px; border-radius: 99px; background: rgba(255,255,255,.18); display: block; }
+      .phase-pips i.done { background: #57c78f; }
+      .phase-pips i.now { background: #e0785f; box-shadow: 0 0 8px rgba(224,120,95,.8); }
+
+      .phase-banner {
+        position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none;
+        opacity: 0; transition: opacity .3s ease; z-index: 5;
+      }
+      .phase-banner.show { opacity: 1; }
+      .phase-banner .pb-card {
+        background: rgba(8, 16, 26, .82); border: 1px solid rgba(224, 120, 95, .6); border-radius: 14px;
+        padding: 14px 30px; text-align: center; backdrop-filter: blur(2px);
+      }
+      .phase-banner .pb-kicker { font-size: .72rem; font-weight: 800; letter-spacing: .22em; color: #e0a05f; text-transform: uppercase; }
+      .phase-banner .pb-name { font-family: "Barlow Semi Condensed", sans-serif; font-size: 1.9rem; font-weight: 700; color: #f2f7fc; line-height: 1.1; }
+      .phase-banner .pb-desc { color: #a9c2da; font-size: .9rem; }
+
+      .popup {
+        position: absolute; left: 50%; top: -8px; transform: translateX(-50%);
+        font-weight: 800; font-size: 1.02rem; pointer-events: none; z-index: 6;
+        text-shadow: 0 2px 4px rgba(0,0,0,.65); animation: floatUp 0.95s ease-out forwards; white-space: nowrap;
+      }
+      .popup.dmg { color: #ffd9a8; }
+      .popup.crit { color: #ffc46b; font-size: 1.5rem; letter-spacing: .02em; }
+      .popup.hurt { color: #ff9d8a; }
+      .popup.heal { color: #8df0bd; }
+      .popup.shield { color: #a9d4f7; font-size: .88rem; }
+      @keyframes floatUp {
+        0% { opacity: 0; transform: translate(-50%, 6px) scale(.8); }
+        15% { opacity: 1; transform: translate(-50%, -4px) scale(1.05); }
+        100% { opacity: 0; transform: translate(-50%, -44px) scale(1); }
+      }
+
+      /* ---------- entertainment pass: ultimates, telegraphs, juice ---------- */
+      .ultbar { width: 100%; max-width: 108px; height: 6px; border-radius: 99px; background: rgba(255,255,255,.14); margin-top: 5px; overflow: hidden; }
+      .ultfill { height: 100%; width: 0%; border-radius: 99px; background: linear-gradient(90deg, var(--gold), #f3cd7e); transition: width .25s ease; }
+      .ult-btn {
+        display: none; margin-top: 7px; min-height: 44px; padding: 7px 10px; width: 100%;
+        border-radius: 10px; border: 2px solid #f3cd7e; background: linear-gradient(180deg, #8a5f14, #6d4a0e);
+        color: #ffe9b0; font-weight: 800; font-size: .72rem; letter-spacing: .03em; line-height: 1.2;
+        box-shadow: 0 0 14px rgba(243, 205, 126, .55); animation: ultPulse 1s ease-in-out infinite;
+      }
+      .ult-btn.ready { display: block; }
+      @keyframes ultPulse { 0%,100% { transform: scale(1); filter: brightness(1); } 50% { transform: scale(1.045); filter: brightness(1.3); } }
+      .badge.exposed { border-color: #f3cd7e; color: #ffe9b0; background: rgba(90, 60, 8, .85); }
+      .unit.exposed .token { box-shadow: 0 0 0 3px rgba(243,205,126,.8), 0 0 26px rgba(243,205,126,.55), inset 0 -10px 18px rgba(0,0,0,.35), inset 0 6px 10px rgba(255,255,255,.22); }
+      .unit.flash .token { filter: brightness(1.85) saturate(1.25); }
+      .arena.shake { animation: arenaShake .35s ease; }
+      @keyframes arenaShake {
+        0%,100% { transform: none; }
+        20% { transform: translate(calc(var(--shake-amp, 6px) * -1), 2px); }
+        45% { transform: translate(var(--shake-amp, 6px), -2px); }
+        70% { transform: translate(calc(var(--shake-amp, 6px) * -.6), 1px); }
+      }
+      .arena.slowmo .token { transition-duration: 1.1s; }
+      .arena.slowmo .popup { animation-duration: 2.6s; }
+      .particle {
+        position: absolute; left: 50%; top: 36px; width: 7px; height: 7px; border-radius: 50%;
+        pointer-events: none; z-index: 7; animation: burstFly .65s ease-out forwards;
+      }
+      @keyframes burstFly {
+        0% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+        100% { opacity: 0; transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(.4); }
+      }
+      .telegraph-banner {
+        position: absolute; top: 12px; left: 50%; transform: translate(-50%, -8px); z-index: 6;
+        background: rgba(64, 18, 10, .9); border: 1px solid #e0785f; color: #ffd9a8;
+        font-weight: 800; font-size: .92rem; padding: 9px 18px; border-radius: 999px;
+        opacity: 0; pointer-events: none; transition: opacity .25s ease, transform .25s ease;
+        text-align: center; max-width: 92%;
+      }
+      .telegraph-banner.show { opacity: 1; transform: translate(-50%, 0); animation: ultPulse .9s ease-in-out infinite; }
+      .phase-banner .pb-taunt { color: #f3cd7e; font-style: italic; font-size: .95rem; margin-top: 5px; }
+      #flash-overlay { position: fixed; inset: 0; pointer-events: none; opacity: 0; z-index: 90; }
+      #flash-overlay.go-win { background: radial-gradient(circle at 50% 42%, rgba(255, 240, 200, .95), rgba(243, 205, 126, .35) 55%, transparent 75%); animation: flashAnim .8s ease-out; }
+      #flash-overlay.go-lose { background: radial-gradient(circle at 50% 42%, rgba(30, 4, 4, .92), rgba(90, 20, 14, .5) 60%, transparent 80%); animation: flashAnim .9s ease-out; }
+      @keyframes flashAnim { 0% { opacity: 0; } 18% { opacity: .85; } 100% { opacity: 0; } }
+      .result-hero h1 { animation: rankReveal .65s cubic-bezier(.2, 1.4, .4, 1) both .12s; }
+      @keyframes rankReveal { from { opacity: 0; transform: scale(1.45); letter-spacing: .14em; } to { opacity: 1; transform: none; letter-spacing: normal; } }
+      .ult-line { display: block; margin-top: 3px; }
+
+      .battle-grid { display: grid; grid-template-columns: 1fr; gap: 14px; margin-top: 14px; }
+      @media (min-width: 860px) { .battle-grid { grid-template-columns: 1fr 340px; align-items: start; } }
+      .log-panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); padding: 12px 14px; }
+      .log-panel h2 { font-size: .95rem; text-transform: uppercase; letter-spacing: .08em; color: var(--ink-soft); margin-bottom: 8px; display: flex; justify-content: space-between; align-items: baseline; }
+      .log-panel h2 .round-tag { color: var(--muted); letter-spacing: 0; text-transform: none; font-family: "Barlow", sans-serif; font-weight: 700; }
+      .log { list-style: none; margin: 0; padding: 0; max-height: 330px; overflow-y: auto; font-size: .9rem; }
+      .log li { padding: 4px 2px; border-bottom: 1px dashed var(--line); color: var(--ink-soft); }
+      .log li:last-child { border-bottom: 0; }
+      .log li b { color: var(--ink); }
+      .log li.phase { color: var(--danger); font-weight: 700; }
+      .log li.good { color: var(--good); font-weight: 600; }
+      .log li.sys { color: var(--muted); font-style: italic; }
+      .round-divider { text-align: center; font-size: .7rem !important; font-weight: 800; letter-spacing: .18em; color: var(--muted) !important; text-transform: uppercase; padding: 6px 0 2px !important; }
+
+      /* ---------- results ---------- */
+      .result-hero {
+        border-radius: var(--radius); padding: 22px; text-align: center; color: #fff; margin-bottom: 16px;
+        box-shadow: var(--shadow-lg);
+      }
+      .result-hero.win { background: linear-gradient(135deg, #1f4e82, #2e8b6e); }
+      .result-hero.lose { background: linear-gradient(135deg, #40242c, #71352a); }
+      .result-hero .r-kicker { font-size: .75rem; font-weight: 800; letter-spacing: .24em; text-transform: uppercase; opacity: .85; }
+      .result-hero h1 { font-size: 2.3rem; line-height: 1.05; margin: 4px 0; }
+      .result-hero .r-sub { opacity: .92; }
+      .result-stats { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 14px; }
+      .rstat { background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.25); border-radius: 12px; padding: 8px 16px; min-width: 104px; }
+      .rstat b { display: block; font-size: 1.35rem; font-variant-numeric: tabular-nums; line-height: 1.1; }
+      .rstat span { font-size: .7rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; opacity: .85; }
+      .breakdown { display: grid; gap: 10px; }
+      .bd-row {
+        display: flex; gap: 12px; align-items: center; background: var(--surface); border: 1px solid var(--line);
+        border-radius: 12px; padding: 10px 14px; box-shadow: var(--shadow); flex-wrap: wrap;
+      }
+      .bd-row .avatar { width: 42px; height: 42px; }
+      .bd-row .avatar svg { width: 22px; height: 22px; }
+      .bd-name { font-weight: 800; min-width: 110px; }
+      .bd-name small { display: block; color: var(--muted); font-weight: 600; }
+      .bd-name .ko { color: var(--danger); }
+      .bd-nums { display: flex; gap: 16px; flex-wrap: wrap; margin-left: auto; font-variant-numeric: tabular-nums; }
+      .bd-nums div { text-align: right; }
+      .bd-nums b { display: block; font-size: 1.02rem; line-height: 1.1; }
+      .bd-nums span { font-size: .64rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+      .dmgbar { flex: 1 1 100%; height: 6px; background: var(--surface-2); border-radius: 99px; overflow: hidden; }
+      .dmgbar i { display: block; height: 100%; background: var(--accent); border-radius: 99px; }
+      .result-actions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-top: 18px; }
+
+      /* ---------- data lab ---------- */
+      .rstat.dark { background: var(--surface); border-color: var(--line); color: var(--ink); box-shadow: var(--shadow); }
+      .rstat.dark span { color: var(--muted); opacity: 1; }
+      .lab-table-wrap { overflow-x: auto; }
+      .lab-table { width: 100%; border-collapse: collapse; font-size: .95rem; font-variant-numeric: tabular-nums; }
+      .lab-table th { text-align: left; font-size: .7rem; letter-spacing: .09em; text-transform: uppercase; color: var(--muted); padding: 6px 8px; border-bottom: 2px solid var(--line); }
+      .lab-table td { padding: 7px 8px; border-bottom: 1px solid var(--line); }
+      .lab-table tr:last-child td { border-bottom: 0; }
+      .lab-role { font-size: .7rem; font-weight: 800; letter-spacing: .07em; text-transform: uppercase; margin-left: 4px; }
+      .lab-role.tank { color: var(--role-tank); } .lab-role.damage { color: var(--role-damage); } .lab-role.support { color: var(--role-support); }
+      .lab-empty { color: var(--muted); }
+      .phase-row { display: flex; align-items: center; gap: 12px; padding: 5px 0; }
+      .phase-label { flex: 0 0 210px; font-weight: 600; font-size: .92rem; }
+      .phase-bar { flex: 1; height: 10px; background: var(--surface-2); border-radius: 99px; overflow: hidden; }
+      .phase-bar i { display: block; height: 100%; background: var(--danger); border-radius: 99px; transition: width .4s ease; }
+      .hist-row { display: flex; gap: 12px; align-items: center; padding: 9px 2px; border-bottom: 1px dashed var(--line); flex-wrap: wrap; }
+      .hist-row:last-child { border-bottom: 0; }
+      .hist-badge { font-size: .72rem; font-weight: 800; letter-spacing: .06em; padding: 3px 9px; border-radius: 99px; flex: none; }
+      .hist-badge.win { background: var(--good-soft); color: var(--good); }
+      .hist-badge.lose { background: var(--danger-soft); color: var(--danger); }
+      .hist-main { flex: 1 1 240px; }
+      .hist-main small { display: block; color: var(--muted); }
+      .hist-tokens { font-weight: 700; color: var(--muted); font-variant-numeric: tabular-nums; }
+      @media (max-width: 560px) { .phase-label { flex-basis: 130px; font-size: .82rem; } }
+
+      .footnote { color: var(--muted); font-size: .85rem; text-align: center; margin-top: 22px; }
+
+      /* cloud telemetry status (Data Lab header) */
+      .cloud-dot {
+        display: inline-block; width: 10px; height: 10px; border-radius: 50%;
+        background: var(--muted); margin-left: 12px; vertical-align: middle;
+        box-shadow: 0 0 0 3px var(--surface-2);
+      }
+      .cloud-dot.on { background: var(--good); }
+      .cloud-label { font-family: "Barlow", sans-serif; font-size: .8rem; font-weight: 600; color: var(--muted); margin-left: 7px; vertical-align: middle; letter-spacing: 0; text-transform: none; }
+
+      /* ---------- combat depth pass: stances, jobbed adds, focus fire ---------- */
+      .stance-tag {
+        margin-top: 6px; display: inline-flex; align-items: center; gap: 6px;
+        padding: 3px 11px; border-radius: 999px; border: 1.5px solid;
+        background: rgba(10, 20, 32, .78); font-size: .68rem; font-weight: 800;
+        letter-spacing: .08em; text-transform: uppercase;
+      }
+      .stance-tag svg { width: 13px; height: 13px; }
+      .stance-tag.st-bulwark { border-color: #7ba9d4; color: #a9cdf2; }
+      .stance-tag.st-reaver { border-color: #e0785f; color: #ffb59f; }
+      .stance-tag.st-oracle { border-color: #57c78f; color: #a5e8c6; }
+      .stance-fx { display: block; font-size: .68rem; color: #a9c2da; font-weight: 600; margin-top: 3px; }
+      .unit.add-mend .token { background: radial-gradient(circle at 32% 28%, #6fceaa, #22795a 75%); }
+      .unit.add-ward .token { background: radial-gradient(circle at 32% 28%, #7ba9d4, #3d6ea6 75%); }
+      .unit.enemy { cursor: pointer; }
+      .unit.focused .token {
+        box-shadow: 0 0 0 3px #f3cd7e, 0 0 24px rgba(243, 205, 126, .65),
+          inset 0 -10px 18px rgba(0,0,0,.35), inset 0 6px 10px rgba(255,255,255,.22);
+      }
+      .badge.focus { border-color: #f3cd7e; color: #ffe9b0; background: rgba(90, 60, 8, .85); }
+      .badge.aegis { border-color: var(--cyan); color: #9fe6f2; }
+      .badge.weakened { border-color: #c9a0e8; color: #e3ccf7; }
+      .focus-chip {
+        position: absolute; top: 12px; left: 12px; z-index: 6; min-height: 44px;
+        padding: 8px 15px; border-radius: 999px; background: rgba(90, 60, 8, .93);
+        border: 1.5px solid #f3cd7e; color: #ffe9b0; font-weight: 800; font-size: .85rem;
+      }
+      .focus-chip[hidden] { display: none; }
+      .stance-banner {
+        position: absolute; top: 58px; left: 50%; transform: translate(-50%, -8px); z-index: 6;
+        background: rgba(20, 40, 64, .93); border: 1px solid var(--accent); color: #d7e7f7;
+        font-weight: 700; font-size: .9rem; padding: 9px 18px; border-radius: 999px;
+        opacity: 0; pointer-events: none; transition: opacity .25s ease, transform .25s ease;
+        text-align: center; max-width: 92%;
+      }
+      .stance-banner.show { opacity: 1; transform: translate(-50%, 0); }
+      .stance-banner b { color: #f3cd7e; }
+      .focus-hint {
+        position: absolute; left: 50%; bottom: 12px; transform: translateX(-50%); z-index: 6;
+        background: rgba(10, 20, 32, .9); color: #ffe9b0; border: 1px solid #f3cd7e;
+        padding: 9px 18px; border-radius: 999px; font-weight: 700; font-size: .9rem;
+        opacity: 0; pointer-events: none; transition: opacity .3s ease; text-align: center; max-width: 92%;
+      }
+      .focus-hint.show { opacity: 1; }
+
+      /* ---------- combo meter + auto-ult ---------- */
+      .combo-ui { display: inline-flex; align-items: center; gap: 7px; }
+      #combo-label {
+        font-weight: 800; font-size: .85rem; padding: 9px 12px; border-radius: 999px;
+        background: var(--surface-2); border: 1px solid var(--line-strong); color: var(--muted);
+        min-width: 104px; text-align: center; font-variant-numeric: tabular-nums;
+      }
+      #combo-label.hot { color: var(--gold); border-color: var(--gold); background: var(--surface); }
+      #combo-label.banked { color: var(--good); border-color: var(--good); background: var(--good-soft); }
+      .combo-btn { min-height: 44px; }
+      .combo-btn:not(:disabled) { border-color: var(--gold); color: var(--gold); background: var(--surface); }
+      #btn-autoult { min-height: 44px; }
+      #btn-autoult.off { color: var(--gold); border-color: var(--gold); }
+
+      /* ---------- draft: scout report + loadout picker ---------- */
+      .scout-row { display: flex; gap: 10px; align-items: flex-start; padding: 9px 2px; border-bottom: 1px dashed var(--line); flex-wrap: wrap; }
+      .scout-row:last-child { border-bottom: 0; }
+      .scout-phase { font-weight: 800; flex: 0 0 180px; }
+      .scout-phase small { display: block; color: var(--muted); font-weight: 600; font-size: .82rem; }
+      .stance-chip {
+        display: inline-flex; gap: 6px; align-items: center; flex: none;
+        font-size: .72rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase;
+        padding: 4px 10px; border-radius: 999px; border: 1.5px solid; margin-top: 2px;
+      }
+      .stance-chip svg { width: 13px; height: 13px; }
+      .chip-bulwark { color: var(--role-tank); border-color: var(--role-tank); }
+      .chip-reaver { color: var(--role-damage); border-color: var(--role-damage); }
+      .chip-oracle { color: var(--role-support); border-color: var(--role-support); }
+      .scout-fx { color: var(--muted); font-size: .88rem; flex: 1 1 230px; }
+      .scout-fx b { color: var(--ink-soft); }
+      .kit-lines { display: contents; }
+      .hero-card { cursor: pointer; }
+      .loadout-btn {
+        display: none; margin-top: 10px; min-height: 44px; padding: 8px 16px;
+        border-radius: 10px; border: 1.5px solid var(--accent); background: var(--surface);
+        color: var(--accent-deep); font-weight: 800; font-size: .86rem;
+      }
+      .hero-card.selected .loadout-btn { display: inline-block; }
+      .custom-tag { color: var(--gold); font-weight: 800; font-size: .78rem; letter-spacing: .04em; }
+      .modal-backdrop {
+        position: fixed; inset: 0; z-index: 60; background: rgba(10, 18, 28, .55);
+        display: grid; place-items: end center; padding: 12px;
+      }
+      .modal-backdrop[hidden] { display: none; }
+      @media (min-width: 640px) { .modal-backdrop { place-items: center; } }
+      .modal-card {
+        background: var(--surface); border: 1px solid var(--line-strong); border-radius: 16px;
+        box-shadow: var(--shadow-lg); width: 100%; max-width: 520px; max-height: 88vh;
+        overflow-y: auto; padding: 16px 18px;
+      }
+      .lo-head { display: flex; gap: 12px; align-items: center; }
+      .lo-head .grow { flex: 1; min-width: 0; }
+      #lo-name { font-weight: 800; font-size: 1.18rem; line-height: 1.15; }
+      .modal-card h3 { font-size: .78rem; text-transform: uppercase; letter-spacing: .09em; color: var(--muted); margin: 16px 0 8px; }
+      .lo-opts { display: grid; gap: 8px; }
+      .lo-opt {
+        text-align: left; border: 2px solid var(--line); background: var(--surface-2);
+        border-radius: 12px; padding: 10px 13px; color: var(--ink); min-height: 44px; width: 100%;
+      }
+      .lo-opt b { display: block; font-size: .98rem; }
+      .lo-opt span { color: var(--muted); font-size: .88rem; }
+      .lo-opt.on { border-color: var(--accent); background: var(--accent-soft); }
+      .lo-foot { display: flex; justify-content: space-between; align-items: center; margin-top: 18px; gap: 8px; flex-wrap: wrap; }
+
+      @media (max-width: 560px) {
+        .wrap { padding: 12px 10px 28px; }
+        /* on phones the squad bar sits in flow at the end of the draft —
+           a fixed bar permanently covers whatever scrolls beneath it */
+        .squadbar { position: static; box-shadow: none; border-top: 2px solid var(--line-strong); margin-top: 8px; }
+        .unit { width: 31%; max-width: 118px; }
+        .unit.hero .token { width: 54px; height: 54px; }
+        .unit.boss .token { width: 96px; height: 96px; }
+        .hero-grid { grid-template-columns: 1fr 1fr; }
+        .hero-card { padding: 10px; }
+        .avatar { width: 42px; height: 42px; }
+        .avatar svg { width: 22px; height: 22px; }
+        .ability { font-size: .8rem; }
+        .stat b { font-size: .88rem; }
+        .squadbar-inner { gap: 8px; }
+        .squadbar .slots { order: 1; }
+        .squadbar .bar-actions { order: 2; margin-left: auto; }
+        .squadbar .squad-meta { order: 3; flex: 1 1 100%; min-width: 0; }
+        .squadbar .squad-status { font-size: .88rem; line-height: 1.25; }
+        .slot { width: 40px; height: 40px; }
+        .btn.primary { padding: 10px 16px; }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .screen.active { animation: none; }
+        .popup { animation-duration: .3s; }
+        .unit.hit .token, .unit.lunge .token { animation: none; }
+        .hero-card:hover { transform: none; }
+        .arena.shake, .ult-btn.ready, .telegraph-banner.show { animation: none; }
+        .particle { display: none; }
+        .result-hero h1 { animation: none; }
+        #flash-overlay.go-win, #flash-overlay.go-lose { animation-duration: .2s; }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="wrap">
+      <!-- ================= DRAFT ================= -->
+      <section id="screen-draft" class="screen active">
+        <div class="topstrip">
+          <div class="brandline">
+            <span class="game-name">Project Haven</span>
+            <span class="tag">Playable prototype · Season 1 — The Hollow King</span>
+          </div>
+          <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+            <button type="button" class="btn small" id="btn-sound">Sound: on</button>
+            <button type="button" class="btn small" id="btn-lab-open">Data Lab</button>
+            <div class="token-chip" title="Season tokens earned this session">
+              <span class="coin"></span><span id="token-count">0</span><small>season tokens</small>
+            </div>
+          </div>
+        </div>
+
+        <div class="intro">
+          <h1>Draft your squad. Break the Hollow King.</h1>
+          <p>Pick <strong>5 heroes</strong> — at least one Tank, one Damage, one Support — then face
+          <strong>The Hollow King</strong> through all four of his phases. He fights in rotating <strong>stances</strong> —
+          Bulwark armor, Reaver fury, Oracle healing — scouted below so your draft is strategy, not guessing. His adds have
+          <strong>jobs</strong>: Mends heal him, Wards shield him, so target priority matters. Tap a picked hero to choose its
+          <strong>loadout</strong> — one ability variant, one ult variant. In battle, heroes fight on their own, but
+          <strong>focus fire</strong> and <strong>ultimates</strong> are yours: tap any enemy to converge the squad on it, and fire
+          charged ults into the King's <strong>Exposed</strong> windows, when he takes +50% damage.
+          Out-draft the boss, then out-play him.</p>
+        </div>
+
+        <div class="panel">
+          <h2>Boss mutator — optional</h2>
+          <p class="hint">Mutators rewrite the fight for everyone, boss included. Turn one on for a harder fight and bonus tokens on a win.</p>
+          <div class="mutator-row">
+            <button type="button" class="mutator" id="mut-glass" aria-pressed="false">
+              <span>
+                <span class="mt-name">Glass Court</span>
+                <span class="mt-desc">All damage dealt and taken is increased by 35%. Fast fights, sharp edges.</span>
+              </span>
+              <span class="mt-state">OFF</span>
+            </button>
+            <button type="button" class="mutator" id="mut-ash" aria-pressed="false">
+              <span>
+                <span class="mt-name">Creeping Ash</span>
+                <span class="mt-desc">At the start of every round, each hero takes 3 damage (shields absorb it first). A slow clock on every comp.</span>
+              </span>
+              <span class="mt-state">OFF</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2>Scout report — the King's stances &amp; court</h2>
+          <p class="hint">The King takes one stance per phase and shifts once more mid-phase, telegraphed a round ahead. Draft against what's coming — piercing and target priority beat Bulwark, sustain beats Reaver, burst beats Oracle.</p>
+          <div id="scout-list"></div>
+        </div>
+
+        <div class="panel">
+          <h2>Squad synergies</h2>
+          <p class="hint">Composition bonuses. They switch on live as your picks satisfy them — watch this panel while you draft.</p>
+          <div class="synergy-list" id="synergy-list"></div>
+        </div>
+
+        <div id="roster"></div>
+
+        <p class="footnote">Prototype roster — placeholder heroes and numbers, tuned to prove the loop: draft → fight → results → redraft.</p>
+      </section>
+
+      <!-- ================= BATTLE ================= -->
+      <section id="screen-battle" class="screen">
+        <div class="battle-head">
+          <h1 id="battle-title">The Hollow King</h1>
+          <div class="battle-controls">
+            <div class="speed-group" role="group" aria-label="Battle speed">
+              <button type="button" data-speed="1" class="on">1×</button>
+              <button type="button" data-speed="2">2×</button>
+              <button type="button" data-speed="4">4×</button>
+            </div>
+            <button type="button" class="btn small" id="btn-autoult">Auto-ult: on</button>
+            <span class="combo-ui">
+              <span id="combo-label">Combo ×0</span>
+              <button type="button" class="btn small combo-btn" id="btn-combo" disabled>Cash in</button>
+            </span>
+            <button type="button" class="btn small" id="btn-pause">Pause</button>
+            <button type="button" class="btn small" id="btn-skip">Skip to result</button>
+            <button type="button" class="btn small danger-ghost" id="btn-flee">Abandon</button>
+            <button type="button" class="btn small" id="btn-sound-b">Sound: on</button>
+          </div>
+        </div>
+
+        <div class="arena" id="arena">
+          <div class="telegraph-banner" id="telegraph-banner" role="alert"></div>
+          <div class="stance-banner" id="stance-banner"></div>
+          <button type="button" id="focus-chip" class="focus-chip" hidden>Focus: — · tap to clear</button>
+          <div class="focus-hint" id="focus-hint">Tap an enemy to focus fire — tap it again to release.</div>
+          <div class="phase-banner" id="phase-banner">
+            <div class="pb-card">
+              <div class="pb-kicker" id="pb-kicker">Phase 1</div>
+              <div class="pb-name" id="pb-name">The Court Assembles</div>
+              <div class="pb-desc" id="pb-desc"></div>
+              <div class="pb-taunt" id="pb-taunt"></div>
+            </div>
+          </div>
+          <div class="enemy-zone" id="enemy-zone"></div>
+          <div class="party-zone" id="party-zone"></div>
+        </div>
+
+        <div class="battle-grid">
+          <div class="panel" style="margin:0;">
+            <h2>Squad orders — autoplay policy</h2>
+            <p class="hint" style="margin:0;"><strong>Focus fire is yours:</strong> tap any enemy to set the squad's focus — every single-target
+            attack and ult converges on it until it dies or you tap it again (or the gold chip) to release. Unfocused, the squad works the
+            priority list: <strong>Mend adds → Ward adds → Thralls → the King</strong>. Abilities fire on cooldown when their trigger is met;
+            tanks taunt the King onto themselves; supports heal the most wounded ally. <strong>Combo:</strong> consecutive hits by
+            <em>different</em> heroes build the combo meter — cash it in for bonus damage on the next squad strike (+5% per count, up to +100%),
+            ideally into an Exposed window. <strong>Ultimates</strong> charge as heroes deal and take damage — with Auto-ult on, a hero fires
+            theirs during Exposed windows or once the King is below half health; turn Auto-ult off and every ult waits for your tap.</p>
+          </div>
+          <div class="log-panel">
+            <h2>Battle log <span class="round-tag" id="round-tag">Round 1</span></h2>
+            <ul class="log" id="battle-log"></ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= RESULTS ================= -->
+      <section id="screen-results" class="screen">
+        <div id="result-hero" class="result-hero"></div>
+        <div class="panel">
+          <h2>Squad breakdown</h2>
+          <div class="breakdown" id="breakdown"></div>
+        </div>
+        <div class="result-actions">
+          <button type="button" class="btn" id="btn-retry">Retry — same squad</button>
+          <button type="button" class="btn" id="btn-lab-open-results">Data Lab</button>
+          <button type="button" class="btn primary" id="btn-redraft">Draft again</button>
+        </div>
+        <p class="footnote" id="result-note"></p>
+      </section>
+
+      <!-- ================= DATA LAB ================= -->
+      <section id="screen-lab" class="screen">
+        <div class="battle-head">
+          <h1>Data Lab — playtest telemetry<span class="cloud-dot" id="cloud-dot" role="status" aria-label="Cloud telemetry status"></span><span class="cloud-label" id="cloud-label">cloud: connecting…</span></h1>
+          <button type="button" class="btn" id="btn-lab-back">← Back to draft</button>
+        </div>
+        <p class="hint" style="color:var(--muted); margin:0 0 14px;">Every draft pick, battle action, phase change, and result is logged silently on this device as you play, and streamed to the cloud backend whenever it's reachable. Export the JSON and share it back for deeper tuning analysis.</p>
+
+        <div class="result-stats" id="lab-summary" style="justify-content:flex-start; margin:0 0 16px;"></div>
+
+        <div class="panel">
+          <h2>Hero pick &amp; win rates</h2>
+          <div class="lab-table-wrap">
+            <table class="lab-table">
+              <thead><tr><th>Hero</th><th>Picks</th><th>Pick rate</th><th>Wins</th><th>Win rate</th></tr></thead>
+              <tbody id="lab-heroes"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2>Loadout popularity — variants brought to battle</h2>
+          <div id="lab-loadouts"></div>
+        </div>
+
+        <div class="panel">
+          <h2>Defeat analysis — where squads die</h2>
+          <div id="lab-defeats"></div>
+        </div>
+
+        <div class="panel">
+          <h2>Battle history</h2>
+          <div id="lab-history"></div>
+        </div>
+
+        <div class="result-actions" style="justify-content:flex-start;">
+          <button type="button" class="btn primary" id="btn-export">Export data (JSON)</button>
+          <button type="button" class="btn danger-ghost" id="btn-clear-data">Clear all data</button>
+        </div>
+        <p class="footnote">Telemetry is stored in this browser (localStorage) and also streamed to the project's Supabase backend when reachable — if the cloud is down, the local log remains the complete record and nothing breaks.</p>
+      </section>
+    </main>
+
+    <div id="flash-overlay"></div>
+
+    <!-- loadout picker (draft) -->
+    <div id="loadout-modal" class="modal-backdrop" hidden>
+      <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="lo-name">
+        <div class="lo-head">
+          <span class="avatar" id="lo-avatar"></span>
+          <span class="grow"><span id="lo-name"></span><br><span class="hero-role" id="lo-role"></span></span>
+          <button type="button" class="btn small" id="lo-close">Done</button>
+        </div>
+        <h3>Ability — pick one</h3>
+        <div class="lo-opts" id="lo-abilities"></div>
+        <h3>Ultimate — pick one</h3>
+        <div class="lo-opts" id="lo-ults"></div>
+        <div class="lo-foot">
+          <button type="button" class="btn danger-ghost small" id="lo-remove">Remove from squad</button>
+          <span class="hint" style="margin:0;">Loadouts apply to the next battle — swap freely between fights.</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- sticky squad bar (draft only) -->
+    <div class="squadbar" id="squadbar">
+      <div class="squadbar-inner">
+        <div class="slots" id="slots"></div>
+        <div class="squad-meta">
+          <div class="squad-status" id="squad-status">Pick 5 heroes</div>
+        </div>
+        <div class="bar-actions">
+          <button type="button" class="btn ghost" id="btn-random">Surprise me</button>
+          <button type="button" class="btn primary" id="btn-battle" disabled>To battle →</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+    "use strict";
+
+    /* ================= icons (inline SVG, stroke style) ================= */
+    var ICONS = {
+      tank: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l7 3v5c0 4.6-3 7.7-7 9-4-1.3-7-4.4-7-9V6z"/><path d="M12 8v5"/><path d="M9.5 10.5h5"/></svg>',
+      damage: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20L16.5 7.5"/><path d="M14 4l6 6-3.5 1L14 8.5z"/><path d="M4 14v6h6"/></svg>',
+      support: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20s-7-4.3-9-9c-1.2-2.9.6-6 3.6-6C9 5 12 8 12 8s3-3 5.4-3c3 0 4.8 3.1 3.6 6-2 4.7-9 9-9 9z"/></svg>',
+      crown: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 18h18"/><path d="M4 18l-1-9 5 4 4-7 4 7 5-4-1 9z"/><circle cx="12" cy="13.5" r="1.1" fill="currentColor"/></svg>',
+      skull: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a8 8 0 0 0-8 8c0 3 1.7 4.9 3 6v3h10v-3c1.3-1.1 3-3 3-6a8 8 0 0 0-8-8z"/><circle cx="9" cy="11" r="1.2" fill="currentColor"/><circle cx="15" cy="11" r="1.2" fill="currentColor"/><path d="M10 20v-2.5M14 20v-2.5"/></svg>',
+      check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12.5l5 5L20 6.5"/></svg>'
+    };
+
+    /* ================= hero roster ================= */
+    /* ability kinds: tauntShield, shieldAll, tauntHeal, pierce, aoe, multi, chain, heal, buffAtk, ward, bigHeal */
+    var HEROES = [
+      { id: "rook",    name: "Rook",    role: "tank",    hp: 340, atk: 21, def: 18, spd: 7,
+        abilities: [
+          { name: "Bulwark Stance", kind: "tauntShield", cd: 4, shield: 55, text: "Gain 55 shield and Taunt every enemy for 2 rounds." },
+          { name: "Shield Wall", kind: "auraShield", cd: 4, shield: 26, text: "Shield every ally for 26 and Taunt every enemy for 2 rounds." } ],
+        ults: [
+          { name: "Aegis Slam", kind: "tauntShield", shield: 110, text: "Gain 110 shield and Taunt every enemy for 2 rounds." },
+          { name: "Judgement", kind: "strike", mult: 3.0, text: "Strike one enemy for 300% damage — the tank as executioner." } ] },
+      { id: "juniper", name: "Juniper", role: "tank",    hp: 305, atk: 23, def: 14, spd: 9,
+        abilities: [
+          { name: "Rootwall", kind: "shieldAll", cd: 5, shield: 30, text: "Shield every ally for 30." },
+          { name: "Thornsnare", kind: "strike", cd: 4, mult: 1.7, text: "Lash one enemy for 170% damage as the roots bite deep." } ],
+        ults: [
+          { name: "Worldroot", kind: "shieldAll", shield: 60, text: "Shield every ally for 60." },
+          { name: "Verdant Rebirth", kind: "healAll", heal: 45, text: "Restore 45 HP to every ally." } ] },
+      { id: "beacon",  name: "Beacon",  role: "tank",    hp: 295, atk: 25, def: 13, spd: 10,
+        abilities: [
+          { name: "Rally Guard", kind: "tauntHeal", cd: 4, heal: 35, text: "Taunt every enemy for 2 rounds and restore 35 HP to self." },
+          { name: "Beacon's Light", kind: "buffDef", cd: 5, buff: 0.25, rounds: 3, text: "All allies gain +25% DEF for 3 rounds." } ],
+        ults: [
+          { name: "Last Rally", kind: "tauntHeal", heal: 95, text: "Taunt every enemy for 2 rounds and restore 95 HP to self." },
+          { name: "Dawnhammer", kind: "slamTaunt", mult: 2.6, text: "Smash one enemy for 260% damage and Taunt every enemy for 2 rounds." } ] },
+      { id: "granite", name: "Granite", role: "tank",    hp: 385, atk: 18, def: 21, spd: 6,
+        abilities: [
+          { name: "Stoneform", kind: "tauntShield", cd: 5, shield: 80, text: "Gain 80 shield and Taunt every enemy for 2 rounds." },
+          { name: "Seismic Slam", kind: "aoe", cd: 4, mult: 0.7, text: "Slam the ground — every enemy takes 70% damage." } ],
+        ults: [
+          { name: "Mountainheart", kind: "tauntShield", shield: 160, text: "Gain 160 shield and Taunt every enemy for 2 rounds." },
+          { name: "Worldbreaker", kind: "aoe", mult: 1.3, text: "Every enemy takes 130% damage." } ] },
+      { id: "vex",     name: "Vex",     role: "damage",  hp: 180, atk: 42, def: 8,  spd: 15,
+        abilities: [
+          { name: "Piercing Shot", kind: "pierce", cd: 3, mult: 1.9, text: "Strike one enemy for 190% damage, ignoring half its DEF." },
+          { name: "Twin Bolts", kind: "multi", cd: 3, mult: 0.95, hits: 2, text: "Strike one enemy twice for 95% damage each." } ],
+        ults: [
+          { name: "Heartseeker", kind: "pierce", mult: 3.2, text: "Strike one enemy for 320% damage, ignoring half its DEF." },
+          { name: "Volley", kind: "chain", mult: 1.15, count: 5, text: "A bolt that arcs through up to 5 enemies for 115% damage each." } ] },
+      { id: "pyre",    name: "Pyre",    role: "damage",  hp: 172, atk: 39, def: 7,  spd: 12,
+        abilities: [
+          { name: "Ember Nova", kind: "aoe", cd: 4, mult: 0.85, text: "Hit every enemy for 85% damage." },
+          { name: "Immolate", kind: "strike", cd: 4, mult: 2.2, text: "Focus the burn — one enemy takes 220% damage." } ],
+        ults: [
+          { name: "Sunfall", kind: "aoe", mult: 1.5, text: "Hit every enemy for 150% damage." },
+          { name: "White Pyre", kind: "strike", mult: 3.6, text: "One enemy takes 360% damage in white fire." } ] },
+      { id: "wren",    name: "Wren",    role: "damage",  hp: 192, atk: 36, def: 9,  spd: 17,
+        abilities: [
+          { name: "Twin Fang", kind: "multi", cd: 3, mult: 0.75, hits: 2, text: "Strike one enemy twice for 75% damage each." },
+          { name: "Hamstring", kind: "strike", cd: 3, mult: 1.6, text: "One precise cut for 160% damage." } ],
+        ults: [
+          { name: "Thousand Fangs", kind: "multi", mult: 1.1, hits: 3, text: "Strike one enemy three times for 110% damage each." },
+          { name: "Coup de Grâce", kind: "strike", mult: 2.6, execute: 1.6, text: "Strike one enemy for 260% damage — 60% more against enemies below 35% HP." } ] },
+      { id: "tempest", name: "Tempest", role: "damage",  hp: 178, atk: 40, def: 8,  spd: 13,
+        abilities: [
+          { name: "Chain Storm", kind: "chain", cd: 4, mult: 0.95, count: 3, text: "Lightning arcs to up to 3 enemies for 95% damage each." },
+          { name: "Static Field", kind: "aoe", cd: 4, mult: 0.75, text: "Every enemy takes 75% damage in crackling static." } ],
+        ults: [
+          { name: "Judgment Storm", kind: "chain", mult: 1.4, count: 5, text: "Lightning arcs to up to 5 enemies for 140% damage each." },
+          { name: "Eye of the Storm", kind: "strike", mult: 3.4, text: "One enemy takes 340% damage at the storm's heart." } ] },
+      { id: "mira",    name: "Mira",    role: "support", hp: 205, atk: 20, def: 10, spd: 11,
+        abilities: [
+          { name: "Mend", kind: "heal", cd: 3, heal: 50, text: "Restore 50 HP to the most wounded ally." },
+          { name: "Soothing Ward", kind: "ward", cd: 4, shield: 40, heal: 25, text: "Shield the most wounded ally for 40 and restore 25 HP." } ],
+        ults: [
+          { name: "Second Dawn", kind: "bigHeal", heal: 140, text: "Restore 140 HP to the most wounded ally." },
+          { name: "Tide of Grace", kind: "healAll", heal: 70, text: "Restore 70 HP to every ally." } ] },
+      { id: "cantor",  name: "Cantor",  role: "support", hp: 192, atk: 18, def: 9,  spd: 12,
+        abilities: [
+          { name: "War Hymn", kind: "buffAtk", cd: 5, buff: 0.20, rounds: 3, text: "All allies gain +20% ATK for 3 rounds." },
+          { name: "Dirge", kind: "weaken", cd: 5, buff: 0.20, rounds: 3, text: "A dirge that saps the Hollow King — his ATK drops 20% for 3 rounds." } ],
+        ults: [
+          { name: "Crescendo", kind: "buffAtk", buff: 0.35, rounds: 4, text: "All allies gain +35% ATK for 4 rounds." },
+          { name: "Requiem", kind: "aoe", mult: 1.0, text: "A final verse — every enemy takes 100% damage." } ] },
+      { id: "pell",    name: "Pell",    role: "support", hp: 215, atk: 22, def: 11, spd: 10,
+        abilities: [
+          { name: "Aegis Ward", kind: "ward", cd: 4, shield: 55, heal: 15, text: "Shield the most wounded ally for 55 and restore 15 HP." },
+          { name: "Field Dressing", kind: "heal", cd: 3, heal: 55, text: "Restore 55 HP to the most wounded ally." } ],
+        ults: [
+          { name: "Sanctuary", kind: "ward", shield: 115, heal: 45, text: "Shield the most wounded ally for 115 and restore 45 HP." },
+          { name: "Aegis Nova", kind: "shieldAll", shield: 55, text: "Shield every ally for 55." } ] },
+      { id: "iona",    name: "Iona",    role: "support", hp: 188, atk: 24, def: 8,  spd: 14,
+        abilities: [
+          { name: "Dawnlight", kind: "bigHeal", cd: 4, heal: 75, text: "Restore 75 HP to the most wounded ally." },
+          { name: "Sunlance", kind: "strike", cd: 4, mult: 1.8, text: "A lance of dawnlight — one enemy takes 180% damage." } ],
+        ults: [
+          { name: "Daybreak", kind: "bigHeal", heal: 185, text: "Restore 185 HP to the most wounded ally." },
+          { name: "Radiant Burst", kind: "healAll", heal: 60, text: "Restore 60 HP to every ally." } ] }
+    ];
+    /* chosen loadout per hero (variant indices); defaults to variant A */
+    function heroAbility(h) { var lo = loadouts[h.id]; return h.abilities[lo ? lo.a : 0]; }
+    function heroUlt(h) { var lo = loadouts[h.id]; return h.ults[lo ? lo.u : 0]; }
+    function loadoutSnapshot(ids) {
+      var snap = {};
+      ids.forEach(function (id) {
+        var h = HERO_BY_ID[id]; var lo = loadouts[id] || { a: 0, u: 0 };
+        snap[id] = { ability: lo.a, ult: lo.u, abilityName: h.abilities[lo.a].name, ultName: h.ults[lo.u].name };
+      });
+      return snap;
+    }
+
+    var HERO_BY_ID = {};
+    HEROES.forEach(function (h) { HERO_BY_ID[h.id] = h; });
+    var ROLE_LABEL = { tank: "Tank", damage: "Damage", support: "Support" };
+    var ROLE_NOTE = {
+      tank: "Soaks the King's hits. Taunts pull attacks onto the heroes built to take them.",
+      damage: "The clear speed. Focus fire melts thralls, then the King.",
+      support: "Heals, shields, and buffs. The reason the squad is still standing in Phase 4."
+    };
+
+    /* synergies: evaluated from role counts, applied at battle start */
+    var SYNERGIES = [
+      { id: "bulwark", name: "Bulwark Bond", desc: "Tank + Support: squad starts with 25 shield each",
+        test: function (c) { return c.tank >= 1 && c.support >= 1; } },
+      { id: "vanguard", name: "Vanguard", desc: "2+ Tanks: party DEF +15%",
+        test: function (c) { return c.tank >= 2; } },
+      { id: "strike", name: "Strike Team", desc: "2+ Damage: party ATK +12%",
+        test: function (c) { return c.damage >= 2; } },
+      { id: "choir", name: "Choir", desc: "2+ Support: healing +30%",
+        test: function (c) { return c.support >= 2; } }
+    ];
+
+    /* ================= boss ================= */
+    var BOSS = { name: "The Hollow King", hp: 2000, atk: 37, def: 10, spd: 9 };
+    var PHASES = [
+      { name: "The Court Assembles", until: 2000, desc: "Bulwark stance — heavy armor, telegraphed slams, and a court of jobbed thralls." },
+      { name: "Ashfall",             until: 1500, desc: "Reaver stance — savage damage, burning ash, and a Hollow Surge that hunts the frailest hero." },
+      { name: "The Long Night",      until: 1050, desc: "Oracle stance — the King mends himself and shields his court while the night deepens." },
+      { name: "The Hollow Crown",    until: 550,  desc: "Reaver stance, final form — Mend and Ward adds, ashfall, and rising fury, all at once." }
+    ];
+    /* The King's stances — one per phase, plus a telegraphed mid-phase shift.
+       Bulwark: +12 DEF and 12% damage reduction, slow telegraphed slam —
+       punishes pure burst. Reaver: +30% damage — punishes no-sustain comps.
+       Oracle: heals himself 40/round and shields his court — punishes
+       slow, low-DPS comps. */
+    var STANCES = {
+      bulwark: { name: "Bulwark", icon: "tank",    fx: "Heavy armor · telegraphed Bulwark Slam", full: "+12 DEF and takes 12% less damage. Every third action telegraphs a Bulwark Slam — burst comps stall on the armor; piercing and patience pay." },
+      reaver:  { name: "Reaver",  icon: "damage",  fx: "+30% damage dealt", full: "Deals +30% damage with every blow. Squads without healing or shields get ground down — bring sustain or end it fast." },
+      oracle:  { name: "Oracle",  icon: "support", fx: "Heals 40/round · shields his court", full: "Restores 40 HP each round and shields his adds. Slow, low-DPS comps fall behind the healing — bring burst and kill his Mend first." }
+    };
+    var PHASE_STANCE = ["bulwark", "reaver", "oracle", "reaver"];
+    var STANCE_SHIFT = { 0: "reaver", 1: "oracle", 2: "bulwark", 3: "oracle" };
+    var SHIFT_AT_PHASE_ROUNDS = 4;
+    /* Jobbed adds — the job is the target-priority puzzle. Autoplay focus
+       order: Mend > Ward > Thrall > the King (a manual focus overrides). */
+    var ADD_JOBS = {
+      mend:   { name: "Mend Thrall",   hp: 110, atk: 14, def: 3, spd: 9, icon: "support", sub: "Mend — heals the King", jobFx: "Heals the King for 30 each round it lives. Kill it first." },
+      ward:   { name: "Ward Thrall",   hp: 130, atk: 16, def: 6, spd: 7, icon: "tank",    sub: "Ward — shields the King", jobFx: "Grants the King 20 shield each round it lives. Kill it or chew through the shield." },
+      thrall: { name: "Hollow Thrall", hp: 150, atk: 22, def: 4, spd: 8, icon: "skull",   sub: "Thrall — plain damage", jobFx: "Plain damage, no tricks. Lowest priority while its betters live." }
+    };
+    var ADD_SCOUT = [
+      "Thralls open the court; a Mend Thrall joins the next summon.",
+      "No new adds — the King fights alone, and faster.",
+      "No new adds — he heals while the Long Night deepens.",
+      "Mend + Ward pairs guard the King — target priority decides this phase."
+    ];
+
+    /* The Hollow King's voice — one set per phase: lines he opens the phase
+       with, and the line he loses it with. Terse, ominous, no gore. */
+    var TAUNTS = [
+      { enter: ["Sit. The court has missed its guests.", "More candles for an empty hall.", "You knock on a door no one living keeps."],
+        fall: "The court… empties." },
+      { enter: ["Ash remembers every roof it ever fell on.", "Breathe shallow. The sky is mine now.", "I burned once. I learned."],
+        fall: "The ash… settles. For now." },
+      { enter: ["Night is just a longer kind of patience.", "Count your heartbeats. I am.", "The dark does not hurry. Neither do I."],
+        fall: "Even night… ends?" },
+      { enter: ["The crown was never gold. It was always hollow.", "Come then. Let us see what fills you.", "Everything I was, I pour into this."],
+        fall: "Take the dawn. I was only ever its shadow." }
+    ];
+    function pickLine(arr) { return arr[Math.floor(rng() * arr.length)]; }
+
+    /* ================= session state ================= */
+    var selected = [];               // hero ids, pick order
+    var mutators = { glass: false, ash: false };
+    var sessionTokens = 0;
+    var lastSquad = null;            // for retry
+    var loadouts = {};               // heroId -> { a: ability variant idx, u: ult variant idx }
+    /* player settings — the auto-ult preference persists across reloads */
+    var SETTINGS = { autoUlt: true };
+    try {
+      var savedSettings = JSON.parse(localStorage.getItem("haven.settings.v1") || "null");
+      if (savedSettings && typeof savedSettings.autoUlt === "boolean") SETTINGS.autoUlt = savedSettings.autoUlt;
+    } catch (e) { /* defaults stand */ }
+    function saveSettings() {
+      try { localStorage.setItem("haven.settings.v1", JSON.stringify(SETTINGS)); } catch (e) {}
+    }
+
+    function $(id) { return document.getElementById(id); }
+    function roleCounts(ids) {
+      var c = { tank: 0, damage: 0, support: 0 };
+      ids.forEach(function (id) { c[HERO_BY_ID[id].role]++; });
+      return c;
+    }
+    function squadValid(ids) {
+      if (ids.length !== 5) return false;
+      var c = roleCounts(ids);
+      return c.tank >= 1 && c.damage >= 1 && c.support >= 1;
+    }
+
+    /* ================= draft screen ================= */
+    function kitHTML(h) {
+      var ab = heroAbility(h), ul = heroUlt(h);
+      var lo = loadouts[h.id] || { a: 0, u: 0 };
+      return '<span class="ability"><b>' + ab.name + ".</b> " + ab.text +
+          ' <span class="cd">· ' + ab.cd + "-round cooldown</span></span>" +
+        '<span class="ability ult-line"><b>Ult — ' + ul.name + ".</b> " + ul.text + "</span>" +
+        ((lo.a || lo.u) ? '<span class="ability"><span class="custom-tag">CUSTOM LOADOUT</span></span>' : "");
+    }
+
+    /* ---------- loadout picker ---------- */
+    var loadoutHeroId = null;
+    function openLoadout(heroId) {
+      loadoutHeroId = heroId;
+      renderLoadoutModal();
+      $("loadout-modal").hidden = false;
+    }
+    function closeLoadout() {
+      $("loadout-modal").hidden = true;
+      loadoutHeroId = null;
+    }
+    function renderLoadoutModal() {
+      if (!loadoutHeroId) return;
+      var h = HERO_BY_ID[loadoutHeroId];
+      var lo = loadouts[h.id] || { a: 0, u: 0 };
+      var av = $("lo-avatar");
+      av.className = "avatar " + h.role;
+      av.innerHTML = ICONS[h.role];
+      $("lo-name").textContent = h.name;
+      var roleEl = $("lo-role");
+      roleEl.textContent = ROLE_LABEL[h.role] + " — choose how they fight this boss";
+      roleEl.className = "hero-role " + h.role;
+      function fill(hostId, variants, key, isUlt) {
+        var host = $(hostId);
+        host.innerHTML = "";
+        variants.forEach(function (v, idx) {
+          var b = document.createElement("button");
+          b.type = "button";
+          b.className = "lo-opt" + (lo[key] === idx ? " on" : "");
+          b.setAttribute("aria-pressed", lo[key] === idx ? "true" : "false");
+          b.innerHTML = "<b>" + (isUlt ? "Ult — " : "") + v.name + "</b><span>" + v.text +
+            (isUlt ? "" : " · " + v.cd + "-round cooldown") + "</span>";
+          b.addEventListener("click", function () {
+            if (!loadouts[h.id]) loadouts[h.id] = { a: 0, u: 0 };
+            loadouts[h.id][key] = idx;
+            var ab = heroAbility(h), ul = heroUlt(h);
+            tel("loadout_select", { hero: h.id, heroName: h.name,
+              ability: ab.name, abilityVariant: loadouts[h.id].a,
+              ult: ul.name, ultVariant: loadouts[h.id].u });
+            renderLoadoutModal();
+            refreshDraft();
+          });
+          host.appendChild(b);
+        });
+      }
+      fill("lo-abilities", h.abilities, "a", false);
+      fill("lo-ults", h.ults, "u", true);
+    }
+
+    function renderRoster() {
+      var host = $("roster");
+      host.innerHTML = "";
+      ["tank", "damage", "support"].forEach(function (role) {
+        var head = document.createElement("div");
+        head.className = "role-head";
+        head.innerHTML =
+          '<span class="role-dot" style="background:var(--role-' + role + ')"></span>' +
+          "<h2>" + ROLE_LABEL[role] + "s</h2>" +
+          '<span class="role-note">' + ROLE_NOTE[role] + "</span>" +
+          '<span class="role-count" data-role-count="' + role + '"></span>';
+        host.appendChild(head);
+
+        var grid = document.createElement("div");
+        grid.className = "hero-grid";
+        HEROES.filter(function (h) { return h.role === role; }).forEach(function (h) {
+          var card = document.createElement("div");
+          card.className = "hero-card";
+          card.dataset.hero = h.id;
+          card.setAttribute("role", "button");
+          card.setAttribute("tabindex", "0");
+          card.setAttribute("aria-pressed", "false");
+          card.innerHTML =
+            '<span class="pick-badge">' + ICONS.check + "</span>" +
+            '<span class="hero-top">' +
+              '<span class="avatar ' + h.role + '">' + ICONS[h.role] + "</span>" +
+              '<span><span class="hero-name">' + h.name + "</span><br>" +
+              '<span class="hero-role ' + h.role + '">' + ROLE_LABEL[h.role] + "</span></span>" +
+            "</span>" +
+            '<span class="stat-row">' +
+              '<span class="stat"><b>' + h.hp + "</b><span>HP</span></span>" +
+              '<span class="stat"><b>' + h.atk + "</b><span>ATK</span></span>" +
+              '<span class="stat"><b>' + h.def + "</b><span>DEF</span></span>" +
+              '<span class="stat"><b>' + h.spd + "</b><span>SPD</span></span>" +
+            "</span>" +
+            '<span class="kit-lines"></span>' +
+            '<button type="button" class="loadout-btn">Edit loadout</button>';
+          card.querySelector(".kit-lines").innerHTML = kitHTML(h);
+          card.querySelector(".loadout-btn").addEventListener("click", function (ev) {
+            ev.stopPropagation();
+            openLoadout(h.id);
+          });
+          card.addEventListener("click", function () {
+            /* a picked hero opens its loadout picker instead of unpicking —
+               removal lives inside the picker */
+            if (selected.indexOf(h.id) >= 0) openLoadout(h.id);
+            else togglePick(h.id);
+          });
+          card.addEventListener("keydown", function (ev) {
+            if (ev.target !== card) return;
+            if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); card.click(); }
+          });
+          grid.appendChild(card);
+        });
+        host.appendChild(grid);
+      });
+      refreshDraft();
+    }
+
+    function renderScout() {
+      var host = $("scout-list");
+      if (!host) return;
+      host.innerHTML = "";
+      PHASES.forEach(function (p, i) {
+        var st = STANCES[PHASE_STANCE[i]];
+        var shift = STANCES[STANCE_SHIFT[i]];
+        var row = document.createElement("div");
+        row.className = "scout-row";
+        row.innerHTML =
+          '<span class="scout-phase">Phase ' + (i + 1) + " — " + p.name + "<small>" + ADD_SCOUT[i] + "</small></span>" +
+          '<span class="stance-chip chip-' + PHASE_STANCE[i] + '">' + ICONS[st.icon] + st.name + " stance</span>" +
+          '<span class="scout-fx">' + st.full + " <b>Mid-phase shift → " + shift.name + ".</b></span>";
+        host.appendChild(row);
+      });
+      var jobs = document.createElement("div");
+      jobs.className = "scout-row";
+      jobs.innerHTML =
+        '<span class="scout-phase">The court\'s jobs<small>Target priority, in order</small></span>' +
+        '<span class="scout-fx"><b>Mend</b> — ' + ADD_JOBS.mend.jobFx + " <b>Ward</b> — " + ADD_JOBS.ward.jobFx + " <b>Thrall</b> — " + ADD_JOBS.thrall.jobFx + "</span>";
+      host.appendChild(jobs);
+    }
+
+    function togglePick(id) {
+      var i = selected.indexOf(id);
+      if (i >= 0) {
+        selected.splice(i, 1);
+        tel("draft_unpick", { hero: id, heroName: HERO_BY_ID[id].name, squadSize: selected.length });
+      } else {
+        if (selected.length >= 5) return;
+        selected.push(id);
+        tel("draft_pick", { hero: id, heroName: HERO_BY_ID[id].name, pickOrder: selected.length,
+          squadSize: selected.length, squad: selected.slice() });
+      }
+      refreshDraft();
+    }
+
+    function refreshDraft() {
+      var counts = roleCounts(selected);
+      document.querySelectorAll(".hero-card").forEach(function (card) {
+        var id = card.dataset.hero;
+        var on = selected.indexOf(id) >= 0;
+        card.classList.toggle("selected", on);
+        card.setAttribute("aria-pressed", on ? "true" : "false");
+        card.querySelector(".pick-badge").innerHTML = on ? String(selected.indexOf(id) + 1) : "";
+        card.classList.toggle("dim", !on && selected.length >= 5);
+        var kl = card.querySelector(".kit-lines");
+        if (kl) kl.innerHTML = kitHTML(HERO_BY_ID[id]);
+      });
+      document.querySelectorAll("[data-role-count]").forEach(function (el) {
+        el.textContent = counts[el.dataset.roleCount] + " picked";
+      });
+
+      /* slots */
+      var slots = $("slots");
+      slots.innerHTML = "";
+      for (var i = 0; i < 5; i++) {
+        var s = document.createElement("span");
+        var id = selected[i];
+        if (id) {
+          var h = HERO_BY_ID[id];
+          s.className = "slot filled " + h.role;
+          s.innerHTML = ICONS[h.role];
+          s.title = h.name;
+        } else {
+          s.className = "slot";
+          s.textContent = "?";
+        }
+        slots.appendChild(s);
+      }
+
+      /* status + validation */
+      var status = $("squad-status");
+      var missing = [];
+      if (counts.tank < 1) missing.push("a Tank");
+      if (counts.damage < 1) missing.push("a Damage hero");
+      if (counts.support < 1) missing.push("a Support");
+      if (squadValid(selected)) {
+        status.textContent = "Squad ready — 5 heroes, every role covered.";
+        status.className = "squad-status valid";
+      } else if (selected.length < 5) {
+        status.textContent = "Pick " + (5 - selected.length) + " more hero" + (5 - selected.length === 1 ? "" : "es") +
+          (missing.length ? " · still need " + missing.join(", ") : "");
+        status.className = "squad-status";
+      } else {
+        status.textContent = "Full squad, but you're missing " + missing.join(", ") + ".";
+        status.className = "squad-status invalid";
+      }
+      $("btn-battle").disabled = !squadValid(selected);
+
+      /* synergy rows (in the draft panel, updated live) */
+      var list = $("synergy-list");
+      list.innerHTML = "";
+      SYNERGIES.forEach(function (syn) {
+        var on = syn.test(counts);
+        var row = document.createElement("div");
+        row.className = "syn-row" + (on ? " on" : "");
+        row.innerHTML =
+          '<span class="syn-state">' + (on ? "✓" : "—") + "</span>" +
+          '<span><span class="syn-name">' + syn.name + '</span> <span class="syn-desc">· ' + syn.desc + "</span></span>";
+        list.appendChild(row);
+      });
+    }
+
+    function bindMutator(id, key) {
+      var el = $(id);
+      el.addEventListener("click", function () {
+        mutators[key] = !mutators[key];
+        el.classList.toggle("on", mutators[key]);
+        el.setAttribute("aria-pressed", mutators[key] ? "true" : "false");
+        el.querySelector(".mt-state").textContent = mutators[key] ? "ON" : "OFF";
+      });
+    }
+
+    function randomSquad() {
+      var byRole = { tank: [], damage: [], support: [] };
+      HEROES.forEach(function (h) { byRole[h.role].push(h.id); });
+      function shuffle(a) {
+        for (var i = a.length - 1; i > 0; i--) {
+          var j = Math.floor(Math.random() * (i + 1));
+          var t = a[i]; a[i] = a[j]; a[j] = t;
+        }
+        return a;
+      }
+      shuffle(byRole.tank); shuffle(byRole.damage); shuffle(byRole.support);
+      var picks = [byRole.tank[0], byRole.damage[0], byRole.support[0]];
+      var rest = shuffle(byRole.tank.slice(1).concat(byRole.damage.slice(1), byRole.support.slice(1)));
+      picks = picks.concat(rest.slice(0, 2));
+      selected = shuffle(picks);
+      refreshDraft();
+    }
+
+    function showScreen(name) {
+      ["draft", "battle", "results", "lab"].forEach(function (s) {
+        $("screen-" + s).classList.toggle("active", s === name);
+      });
+      $("squadbar").style.display = name === "draft" ? "" : "none";
+      window.scrollTo({ top: 0 });
+    }
+
+    /* ================= telemetry (silent playtest log) ================= */
+    var TEL_KEY = "haven.telemetry.v1";
+    var telEvents = [];
+    var telSession = "s-" + Date.now().toString(36) + "-" + Math.floor(Math.random() * 1e6).toString(36);
+    function telLoad() {
+      try {
+        var raw = localStorage.getItem(TEL_KEY);
+        if (raw) { var parsed = JSON.parse(raw); if (Array.isArray(parsed)) telEvents = parsed; }
+      } catch (e) { telEvents = []; }
+    }
+    var telDirty = false;
+    var telFlushTimer = null;
+    function telSave() {
+      telDirty = false;
+      try {
+        if (telEvents.length > 6000) telEvents = telEvents.slice(telEvents.length - 6000);
+        localStorage.setItem(TEL_KEY, JSON.stringify(telEvents));
+      } catch (e) { /* storage unavailable — telemetry continues in memory only */ }
+    }
+    function telSaveSoon() {
+      telDirty = true;
+      if (telFlushTimer) return;
+      telFlushTimer = setTimeout(function () { telFlushTimer = null; if (telDirty) telSave(); }, 900);
+    }
+    function tel(type, data) {
+      var ev = { t: new Date().toISOString(), session: telSession, type: type };
+      if (data) { for (var k in data) { if (Object.prototype.hasOwnProperty.call(data, k)) ev[k] = data[k]; } }
+      telEvents.push(ev);
+      cloudEnqueue(ev);
+      /* structural events flush immediately; high-frequency combat events batch */
+      if (type === "action" || type === "round") telSaveSoon(); else telSave();
+      /* a finished battle is a natural sync point for the cloud stream */
+      if (type === "battle_end") cloudFlush(false);
+    }
+
+    /* ================= cloud telemetry (Supabase stream, best-effort) =================
+       Every event is also streamed to Supabase over its PostgREST API in small
+       batches. The localStorage log above stays the source of truth: any
+       failure here (offline, tables not created yet, bad response) is silent
+       and must never affect the game. */
+    var SB_URL = "https://msinwffhqtufrhqudrmw.supabase.co";
+    var SB_KEY = "sb_publishable_fBYyKLabErB6B-qE0rX0iQ_cysxJVyQ";
+    var cloudSessionId = null;   /* uuid of this session's ph_sessions row */
+    var cloudQueue = [];         /* events waiting to stream */
+    var cloudFlushing = false;
+    var cloudStarted = false;
+
+    function cloudSetStatus(live, label) {
+      var dot = $("cloud-dot");
+      if (dot) dot.classList.toggle("on", !!live);
+      var lab = $("cloud-label");
+      if (lab) lab.textContent = label;
+    }
+    function cloudEnqueue(ev) {
+      cloudQueue.push(ev);
+      if (cloudQueue.length > 3000) cloudQueue.splice(0, cloudQueue.length - 3000);
+    }
+    function cloudHeaders() {
+      return { "apikey": SB_KEY, "Authorization": "Bearer " + SB_KEY, "Content-Type": "application/json" };
+    }
+    function cloudCreateSession() {
+      if (cloudSessionId) return Promise.resolve(true);
+      return fetch(SB_URL + "/rest/v1/ph_sessions", {
+        method: "POST",
+        headers: Object.assign(cloudHeaders(), { "Prefer": "return=representation" }),
+        body: JSON.stringify({
+          user_agent: navigator.userAgent || "",
+          meta: { localSession: telSession, game: "Project Haven — playable prototype" }
+        })
+      }).then(function (res) {
+        if (!res.ok) throw new Error("session create failed: " + res.status);
+        return res.json();
+      }).then(function (rows) {
+        if (rows && rows[0] && rows[0].id) {
+          cloudSessionId = rows[0].id;
+          cloudSetStatus(true, "cloud: live");
+          return true;
+        }
+        throw new Error("no session id returned");
+      }).catch(function () {
+        cloudSetStatus(false, "cloud: local only");
+        return false;
+      });
+    }
+    function cloudFlush(finalFlush) {
+      if (!cloudQueue.length || typeof fetch !== "function") return;
+      if (cloudFlushing && !finalFlush) return;
+      var batch = cloudQueue.slice();
+      cloudQueue.length = 0;
+      /* keepalive bodies are size-capped (~64KB) — a final flush sends the tail */
+      if (finalFlush && batch.length > 150) batch = batch.slice(batch.length - 150);
+      var send = function () {
+        var rows = batch.map(function (ev) {
+          return { session_id: cloudSessionId, ts: ev.t, type: ev.type, payload: ev };
+        });
+        var opts = { method: "POST", headers: cloudHeaders(), body: JSON.stringify(rows) };
+        if (finalFlush) opts.keepalive = true;
+        cloudFlushing = true;
+        fetch(SB_URL + "/rest/v1/ph_events", opts).then(function (res) {
+          cloudFlushing = false;
+          if (res.ok) {
+            cloudSetStatus(true, "cloud: live");
+          } else {
+            if (!finalFlush) cloudQueue = batch.concat(cloudQueue);
+            cloudSetStatus(false, "cloud: local only");
+          }
+        }).catch(function () {
+          cloudFlushing = false;
+          if (!finalFlush) cloudQueue = batch.concat(cloudQueue);
+          cloudSetStatus(false, "cloud: local only");
+        });
+      };
+      if (cloudSessionId) {
+        send();
+      } else {
+        cloudCreateSession().then(function (ok) {
+          if (ok) send();
+          else if (!finalFlush) cloudQueue = batch.concat(cloudQueue);
+        });
+      }
+    }
+    function cloudStart() {
+      if (cloudStarted) return;
+      cloudStarted = true;
+      cloudSetStatus(false, "cloud: connecting…");
+      cloudCreateSession().then(function () { cloudFlush(false); });
+      setInterval(function () { cloudFlush(false); }, 5000);
+      window.addEventListener("pagehide", function () { cloudFlush(true); });
+      document.addEventListener("visibilitychange", function () {
+        if (document.visibilityState === "hidden") cloudFlush(true);
+      });
+    }
+
+    /* ================= procedural sound (WebAudio, no audio files) =================
+       The context is created/resumed only after a user gesture (autoplay
+       policy). All volumes are modest; every failure is silent. */
+    var SFX = {
+      ctx: null, muted: false, last: {},
+      ensure: function () {
+        if (!this.ctx) {
+          var AC = window.AudioContext || window.webkitAudioContext;
+          if (AC) { try { this.ctx = new AC(); } catch (e) { this.ctx = null; } }
+        }
+        if (this.ctx && this.ctx.state === "suspended") this.ctx.resume();
+      },
+      gate: function (key, ms) {
+        var now = performance.now();
+        if (this.last[key] && now - this.last[key] < ms) return false;
+        this.last[key] = now;
+        return true;
+      },
+      tone: function (freq, dur, type, vol, slideTo, delay) {
+        if (!this.ctx || this.muted) return;
+        var t0 = this.ctx.currentTime + (delay || 0);
+        var o = this.ctx.createOscillator(), g = this.ctx.createGain();
+        o.type = type;
+        o.frequency.setValueAtTime(freq, t0);
+        if (slideTo) o.frequency.exponentialRampToValueAtTime(Math.max(20, slideTo), t0 + dur);
+        g.gain.setValueAtTime(0.0001, t0);
+        g.gain.exponentialRampToValueAtTime(vol, t0 + 0.012);
+        g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+        o.connect(g); g.connect(this.ctx.destination);
+        o.start(t0); o.stop(t0 + dur + 0.05);
+      },
+      noise: function (dur, vol, freq, delay) {
+        if (!this.ctx || this.muted) return;
+        var t0 = this.ctx.currentTime + (delay || 0);
+        var len = Math.max(1, Math.floor(this.ctx.sampleRate * dur));
+        var buf = this.ctx.createBuffer(1, len, this.ctx.sampleRate);
+        var d = buf.getChannelData(0);
+        for (var i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / len);
+        var src = this.ctx.createBufferSource(); src.buffer = buf;
+        var f = this.ctx.createBiquadFilter(); f.type = "lowpass"; f.frequency.value = freq;
+        var g = this.ctx.createGain(); g.gain.value = vol;
+        src.connect(f); f.connect(g); g.connect(this.ctx.destination);
+        src.start(t0);
+      }
+    };
+    function sfx(kind) {
+      if (!SFX.ctx || SFX.muted) return;
+      switch (kind) {
+        case "hit":   if (SFX.gate("hit", 55)) { SFX.noise(0.07, 0.10, 900); SFX.tone(95, 0.08, "sine", 0.10, 55); } break;
+        case "crit":  if (SFX.gate("crit", 55)) { SFX.noise(0.12, 0.16, 3200); SFX.tone(720, 0.14, "square", 0.07, 180); } break;
+        case "heal":  if (SFX.gate("heal", 120)) SFX.tone(520, 0.12, "sine", 0.05, 660); break;
+        case "chime": SFX.tone(660, 0.14, "sine", 0.07); SFX.tone(990, 0.2, "sine", 0.07, null, 0.09); break;
+        case "ult":   SFX.noise(0.32, 0.20, 500); SFX.tone(150, 0.34, "sawtooth", 0.14, 38); SFX.tone(880, 0.2, "sine", 0.06, 1320, 0.03); break;
+        case "horn":  SFX.tone(196, 0.5, "sawtooth", 0.08); SFX.tone(147, 0.5, "sawtooth", 0.07, null, 0.02); SFX.tone(294, 0.45, "triangle", 0.06, null, 0.02); break;
+        case "warn":  SFX.tone(110, 0.16, "square", 0.09); SFX.tone(110, 0.16, "square", 0.09, null, 0.22); break;
+        case "expose": SFX.tone(1180, 0.16, "sine", 0.05, 1560); break;
+        case "win":   [523, 659, 784, 1046].forEach(function (f, i) { SFX.tone(f, 0.22, "triangle", 0.09, null, i * 0.11); }); break;
+        case "lose":  SFX.tone(220, 0.7, "sine", 0.11, 82); SFX.tone(165, 0.8, "triangle", 0.08, 55, 0.08); break;
+      }
+    }
+    function syncSoundButtons() {
+      ["btn-sound", "btn-sound-b"].forEach(function (id) {
+        var b = $(id);
+        if (b) b.textContent = SFX.muted ? "Sound: off" : "Sound: on";
+      });
+    }
+    function syncAutoUltBtn() {
+      var b = $("btn-autoult");
+      if (!b) return;
+      b.textContent = "Auto-ult: " + (SETTINGS.autoUlt ? "on" : "off");
+      b.classList.toggle("off", !SETTINGS.autoUlt);
+    }
+    function toggleSound() {
+      SFX.muted = !SFX.muted;
+      SFX.ensure();
+      syncSoundButtons();
+      tel("ui_interaction", { action: SFX.muted ? "sound_off" : "sound_on" });
+    }
+
+    /* ================= juice helpers ================= */
+    function shakeArena(power) {
+      if (!B || B.skipping) return;
+      var arena = $("arena");
+      arena.classList.remove("shake");
+      void arena.offsetWidth;
+      arena.style.setProperty("--shake-amp", (power >= 1 ? 7 : 4) + "px");
+      arena.classList.add("shake");
+      setTimeout(function () { arena.classList.remove("shake"); }, 380);
+    }
+    function flashUnit(u) {
+      if (!u.el || B.skipping) return;
+      u.el.classList.add("flash");
+      setTimeout(function () { if (u.el) u.el.classList.remove("flash"); }, 170);
+    }
+    function burstParticles(u) {
+      if (!u.el || B.skipping) return;
+      var colors = u.isBoss ? ["#f3cd7e", "#e0785f", "#a9c2da"]
+        : (u.side === "hero" ? ["#ff9d8a", "#a9c2da", "#f3cd7e"] : ["#a9c2da", "#71879c"]);
+      for (var i = 0; i < 10; i++) {
+        var p = document.createElement("span");
+        p.className = "particle";
+        var ang = (i / 10) * Math.PI * 2 + rng() * 0.6;
+        var dist = 34 + rng() * 30;
+        p.style.setProperty("--dx", Math.cos(ang) * dist + "px");
+        p.style.setProperty("--dy", Math.sin(ang) * dist + "px");
+        p.style.background = colors[i % colors.length];
+        u.el.appendChild(p);
+        (function (el) { setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 750); })(p);
+      }
+    }
+    function flashScreen(victory) {
+      var f = $("flash-overlay");
+      f.className = victory ? "go-win" : "go-lose";
+      setTimeout(function () { f.className = ""; }, 850);
+    }
+
+    /* ================= battle engine ================= */
+    var rngState = 0;
+    function rng() { /* mulberry32 — small, decent randomness */
+      rngState |= 0; rngState = (rngState + 0x6D2B79F5) | 0;
+      var t = Math.imul(rngState ^ (rngState >>> 15), 1 | rngState);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    }
+
+    var B = null;        // battle state
+    var uidCounter = 0;
+    var draftEnteredAt = Date.now();
+
+    function phaseOf(hp) {
+      if (hp > 1500) return 0;
+      if (hp > 1050) return 1;
+      if (hp > 550) return 2;
+      return 3;
+    }
+    function unitAtk(u) {
+      if (u.isBoss) {
+        var mult = B.phase === 3 ? 1.3 : 1;
+        if (B.stance === "reaver") mult *= 1.3;
+        else if (B.stance === "oracle") mult *= 0.9;
+        var a = u.atk * mult * (1 + 0.15 * B.enrage);
+        if (u.atkDebuffRounds > 0) a *= (1 - (u.atkDebuffPct || 0));
+        return a;
+      }
+      var a = u.effAtk;
+      if (u.buffRounds > 0) a *= (1 + (u.buffPct || 0.20));
+      return a;
+    }
+    /* the King's effective DEF — Bulwark stance armors him up */
+    function bossDef() { return BOSS.def + (B && B.stance === "bulwark" ? 12 : 0); }
+    function livingHeroes() { return B.heroes.filter(function (u) { return u.alive; }); }
+    function livingEnemies() {
+      var list = B.thralls.filter(function (u) { return u.alive; });
+      if (B.boss.alive) list.push(B.boss);
+      return list;
+    }
+    function mostWoundedAlly() {
+      var list = livingHeroes();
+      if (!list.length) return null;
+      list.sort(function (a, b) { return (a.hp / a.maxHp) - (b.hp / b.maxHp); });
+      return list[0];
+    }
+    function findUnit(uid) {
+      var all = B.all.concat(B.thralls);
+      for (var i = 0; i < all.length; i++) if (all[i].uid === uid) return all[i];
+      return null;
+    }
+    /* Hero targeting: a manual focus overrides everything; otherwise the
+       job-priority list — Mend > Ward > Thrall > the King (lowest HP first
+       within a job). */
+    function heroTargetFor() {
+      if (B.focusId) {
+        var f = findUnit(B.focusId);
+        if (f && f.alive) return f;
+      }
+      var order = ["mend", "ward", "thrall"];
+      for (var j = 0; j < order.length; j++) {
+        var cands = B.thralls.filter(function (u) { return u.alive && u.job === order[j]; });
+        if (cands.length) {
+          cands.sort(function (a, b) { return a.hp - b.hp; });
+          return cands[0];
+        }
+      }
+      return B.boss.alive ? B.boss : null;
+    }
+    function refreshFocusUI() {
+      if (!B) return;
+      B.all.concat(B.thralls).forEach(function (u) { updateUnit(u); });
+      var chip = $("focus-chip");
+      var f = B.focusId ? findUnit(B.focusId) : null;
+      if (f && f.alive) {
+        chip.hidden = false;
+        chip.textContent = "◎ Focus: " + f.name + " — tap to clear";
+      } else {
+        chip.hidden = true;
+      }
+    }
+    function clearFocus(reason) {
+      if (!B || !B.focusId) return;
+      var f = findUnit(B.focusId);
+      tel("focus_cleared", { round: B.round, phase: B.phase + 1, reason: reason,
+        target: f ? f.name : null });
+      B.focusId = null;
+      refreshFocusUI();
+    }
+    function onEnemyTap(u) {
+      if (!B || B.over || !u.alive) return;
+      SFX.ensure();
+      if (B.focusId === u.uid) {
+        clearFocus("toggle_off");
+        addLog("Focus released — the squad returns to its priority list.", "sys");
+        return;
+      }
+      B.focusId = u.uid;
+      tel("focus_set", { round: B.round, phase: B.phase + 1, target: u.name,
+        targetType: u.isBoss ? "boss" : u.job });
+      addLog("Squad focus: <b>" + u.name + "</b> — single-target attacks and ults converge until it falls.", "good");
+      sfx("expose");
+      refreshFocusUI();
+    }
+
+    function enemyTarget() {
+      if (B.tauntTargetId) {
+        var t = null;
+        B.heroes.forEach(function (u) { if (u.uid === B.tauntTargetId) t = u; });
+        if (t && t.alive && t.taunt > 0) return t;
+      }
+      var list = livingHeroes();
+      if (!list.length) return null;
+      /* the King hunts the frailest hero — standing in the back is not safety */
+      var minHp = Math.min.apply(null, list.map(function (u) { return u.hp; }));
+      var frail = list.filter(function (u) { return u.hp <= minHp * 1.35; });
+      return frail[Math.floor(rng() * frail.length)];
+    }
+
+    function addLog(html, cls) {
+      var log = $("battle-log");
+      var li = document.createElement("li");
+      if (cls) li.className = cls;
+      li.innerHTML = html;
+      log.insertBefore(li, log.firstChild);
+      while (log.children.length > 90) log.removeChild(log.lastChild);
+    }
+    function spawnPopup(u, text, cls) {
+      if (!u.el || B.skipping) return;
+      var p = document.createElement("span");
+      p.className = "popup " + cls;
+      p.textContent = text;
+      u.el.appendChild(p);
+      setTimeout(function () { if (p.parentNode) p.parentNode.removeChild(p); }, 1000);
+    }
+    function animateUnit(u, cls) {
+      if (!u.el || B.skipping) return;
+      u.el.classList.add(cls);
+      setTimeout(function () { if (u.el) u.el.classList.remove(cls); }, 330);
+    }
+
+    function applyShield(u, amt) {
+      u.shield = Math.min(140, u.shield + amt);
+      spawnPopup(u, "+" + amt + " shield", "shield");
+    }
+    function doHeal(src, dst, amt, label) {
+      var real = amt;
+      if (B.synergy.choir) real = Math.round(real * 1.3);
+      var healed = Math.min(real, dst.maxHp - dst.hp);
+      dst.hp += healed;
+      src.stats.healed += healed;
+      chargeUlt(src, 5);
+      if (healed > 0) sfx("heal");
+      if (healed > 0) spawnPopup(dst, "+" + healed, "heal");
+      addLog("<b>" + src.name + "</b> uses <b>" + label + "</b> — " + dst.name + " recovers " + healed + " HP.");
+      tel("action", { round: B.round, phase: B.phase + 1, actor: src.name, actorSide: "hero",
+        target: dst.name, ability: label, heal: healed, damage: 0, crit: false, killed: false });
+      updateUnit(dst);
+      return healed;
+    }
+    function dealDamage(src, dst, mult, opts) {
+      opts = opts || {};
+      var def = dst.isBoss ? bossDef() : dst.effDef;
+      if (dst.defBuffRounds > 0) def *= (1 + (dst.defBuffPct || 0));
+      def *= (opts.ignoreDef ? 0.5 : 1);
+      var dmg = unitAtk(src) * mult * (100 / (100 + def));
+      dmg *= 0.9 + rng() * 0.2;
+      var crit = false;
+      if (opts.canCrit && rng() < 0.12) { dmg *= 1.6; crit = true; }
+      if (dst.isBoss && B.exposed) dmg *= 1.5;
+      if (dst.isBoss && B.stance === "bulwark") dmg *= 0.88;
+      if (B.mut.glass) dmg *= 1.35;
+      /* a banked combo cash-in lands on the next squad strike */
+      var comboUsed = 0;
+      if (src.side === "hero" && B.comboBank > 0) {
+        comboUsed = B.comboBank;
+        dmg *= (1 + comboUsed / 100);
+        B.comboBank = 0;
+      }
+      dmg = Math.max(1, Math.round(dmg));
+
+      var absorbed = Math.min(dst.shield, dmg);
+      dst.shield -= absorbed;
+      var hpDmg = dmg - absorbed;
+      dst.hp -= hpDmg;
+      dst.stats.taken += dmg;
+      src.stats.dealt += dmg;
+
+      /* combo meter: counted once per hero action, and only when a
+         *different* hero lands the action's first damaging hit than the
+         previous hitter — same hero twice in a row breaks the chain */
+      if (src.side === "hero" && B.combo) {
+        var cKey = src.uid + "@" + (B.actionSeq || 0);
+        if (B.combo.actionKey !== cKey) {
+          B.combo.actionKey = cKey;
+          if (B.combo.lastHeroUid === src.uid) {
+            B.combo.count = 0;
+            B.combo.logged = {};
+          } else {
+            B.combo.count++;
+            [5, 10, 15, 20].forEach(function (th) {
+              if (B.combo.count === th && !B.combo.logged[th]) {
+                B.combo.logged[th] = true;
+                tel("combo_built", { round: B.round, phase: B.phase + 1, count: th });
+              }
+            });
+          }
+          B.combo.lastHeroUid = src.uid;
+          B.combo.lastDamageRound = B.round;
+          updateComboUI();
+        }
+      }
+
+      var killed = false;
+      if (dst.hp <= 0 && dst.alive) {
+        dst.hp = 0;
+        dst.alive = false;
+        killed = true;
+        src.stats.kos++;
+      }
+      spawnPopup(dst, "-" + dmg + (crit ? "!" : ""), dst.side === "hero" ? "hurt" : (crit ? "crit" : "dmg"));
+      animateUnit(dst, "hit");
+      flashUnit(dst);
+      if (crit) { sfx("crit"); shakeArena(1); } else { sfx("hit"); }
+      if (src.side === "hero") chargeUlt(src, 7);
+      if (dst.side === "hero") chargeUlt(dst, 9);
+      if (killed) burstParticles(dst);
+      tel("action", { round: B.round, phase: B.phase + 1, actor: src.name,
+        actorSide: src.isBoss || src.side === "enemy" ? "enemy" : "hero",
+        target: dst.name, ability: opts.label || "Basic attack", damage: dmg, crit: crit, killed: killed, heal: 0 });
+
+      var label = opts.label || "attacks";
+      if (comboUsed > 0) {
+        addLog("<b>Combo cashed in!</b> This strike lands +" + comboUsed + "% harder.", "good");
+        updateComboUI();
+      }
+      var verb = opts.label ? "uses <b>" + label + "</b> on" : "hits";
+      addLog("<b>" + src.name + "</b> " + verb + " <b>" + dst.name + "</b> for " + dmg + " damage" +
+        (crit ? " — <b>critical!</b>" : "") + (absorbed > 0 ? " (" + absorbed + " absorbed by shield)" : "") + ".");
+      if (killed) {
+        addLog(dst.side === "hero" ? "<b>" + dst.name + "</b> is down!" : "<b>" + dst.name + "</b> crumbles to ash.", dst.side === "hero" ? "phase" : "good");
+        tel("death", { round: B.round, phase: B.phase + 1, unit: dst.name, side: dst.side, by: src.name });
+        if (!dst.isBoss && dst.side === "enemy") {
+          tel("add_kill", { round: B.round, phase: B.phase + 1, job: dst.job, name: dst.name, by: src.name });
+        }
+        if (B.focusId === dst.uid) clearFocus("target_down");
+      }
+      updateUnit(dst);
+      if (dst.isBoss) checkPhase();
+      return dmg;
+    }
+
+    function setTaunt(u, label) {
+      u.taunt = 2;
+      B.tauntTargetId = u.uid;
+      addLog("<b>" + u.name + "</b> uses <b>" + label + "</b> — the King's attention locks on.");
+      tel("action", { round: B.round, phase: B.phase + 1, actor: u.name, actorSide: "hero",
+        target: B.boss.name, ability: label, damage: 0, heal: 0, crit: false, killed: false, taunt: true });
+      updateUnit(u);
+    }
+
+    function chargeUlt(u, amt) {
+      if (!u || u.side !== "hero" || !u.alive || u.ultReady || !B) return;
+      u.ult = Math.min(100, u.ult + amt);
+      if (u.ult >= 100) {
+        u.ultReady = true;
+        u.ultReadyRound = B.round;
+        tel("ult_ready", { round: B.round, phase: B.phase + 1, hero: u.name, ult: u.ultDef.name });
+        sfx("chime");
+        if (!B.skipping) addLog("<b>" + u.name + "</b>'s ultimate is ready — tap the glowing ULT button to fire it!", "good");
+      }
+      updateUnit(u);
+    }
+
+    function updateComboUI() {
+      var label = $("combo-label");
+      var btn = $("btn-combo");
+      if (!label || !btn) return;
+      if (!B) { label.textContent = "Combo ×0"; btn.disabled = true; return; }
+      if (B.comboBank > 0) {
+        label.textContent = "Banked +" + B.comboBank + "%";
+        label.className = "banked";
+      } else {
+        label.textContent = "Combo ×" + B.combo.count;
+        label.className = B.combo.count >= 5 ? "hot" : "";
+      }
+      var bonus = Math.min(100, B.combo.count * 5);
+      btn.disabled = !(B.combo.count >= 2 && !B.over);
+      btn.textContent = B.combo.count >= 2 ? "Cash in +" + bonus + "%" : "Cash in";
+    }
+    function cashCombo() {
+      if (!B || B.over || B.combo.count < 2) return;
+      var bonus = Math.min(100, B.combo.count * 5);
+      tel("combo_cashed", { round: B.round, phase: B.phase + 1, count: B.combo.count,
+        bonusPct: bonus, exposed: B.exposed, stance: B.stance });
+      addLog("<b>Combo cashed in!</b> The next squad strike lands +" + bonus + "% harder.", "good");
+      B.comboBank = bonus;
+      B.combo.count = 0;
+      B.combo.lastHeroUid = null;
+      B.combo.logged = {};
+      sfx("chime");
+      updateComboUI();
+    }
+
+    function useAbility(u) {
+      u.cd = u.ability.cd;
+      executeAbility(u, u.ability, false);
+    }
+
+    /* Manual-mode lite: the player fires a charged ultimate immediately, out
+       of turn order. Autoplay calls this too, under its default policy. */
+    function fireUlt(u, manual) {
+      if (!B || B.over || !u.alive || !u.ultReady) return;
+      B.actionSeq = (B.actionSeq || 0) + 1;
+      var wasExposed = B.exposed;
+      var heldRounds = Math.max(0, B.round - (u.ultReadyRound || B.round));
+      u.ult = 0;
+      u.ultReady = false;
+      tel(manual ? "ult_fired" : "ult_auto", { round: B.round, phase: B.phase + 1, hero: u.name,
+        ult: u.ultDef.name, exposed: wasExposed, heldRounds: heldRounds, bossHp: Math.max(0, B.boss.hp) });
+      addLog("<b>" + u.name + "</b> unleashes <b>" + u.ultDef.name + "</b>!" +
+        (wasExposed ? " The King is EXPOSED — it lands hard." : ""), "good");
+      sfx("ult");
+      shakeArena(0.5);
+      executeAbility(u, u.ultDef, true);
+      updateUnit(u);
+      checkEnd();
+    }
+
+    function executeAbility(u, ab, isUlt) {
+      animateUnit(u, "lunge");
+      switch (ab.kind) {
+        case "tauntShield":
+          applyShield(u, ab.shield);
+          setTaunt(u, ab.name);
+          addLog("<b>" + u.name + "</b> gains " + ab.shield + " shield.");
+          break;
+        case "tauntHeal":
+          setTaunt(u, ab.name);
+          doHeal(u, u, ab.heal, ab.name);
+          break;
+        case "shieldAll":
+          livingHeroes().forEach(function (a) { applyShield(a, ab.shield); updateUnit(a); });
+          addLog("<b>" + u.name + "</b> uses <b>" + ab.name + "</b> — the whole squad gains " + ab.shield + " shield.");
+          tel("action", { round: B.round, phase: B.phase + 1, actor: u.name, actorSide: "hero",
+            target: "Squad", ability: ab.name, damage: 0, heal: 0, crit: false, killed: false, shieldAll: ab.shield });
+          break;
+        case "pierce": {
+          var t1 = heroTargetFor();
+          if (t1) dealDamage(u, t1, ab.mult, { ignoreDef: true, canCrit: true, label: ab.name });
+          break;
+        }
+        case "strike": {
+          var st = heroTargetFor();
+          if (st) {
+            var m = ab.mult;
+            if (ab.execute && st.hp / st.maxHp < 0.35) m *= ab.execute;
+            dealDamage(u, st, m, { canCrit: true, label: ab.name });
+          }
+          break;
+        }
+        case "slamTaunt": {
+          var st2 = heroTargetFor();
+          if (st2) dealDamage(u, st2, ab.mult, { canCrit: true, label: ab.name });
+          setTaunt(u, ab.name);
+          break;
+        }
+        case "aoe": {
+          livingEnemies().slice().forEach(function (e) {
+            if (e.alive) dealDamage(u, e, ab.mult, { canCrit: true, label: ab.name });
+          });
+          break;
+        }
+        case "multi": {
+          for (var i = 0; i < ab.hits; i++) {
+            var t2 = heroTargetFor();
+            if (!t2) break;
+            dealDamage(u, t2, ab.mult, { canCrit: true, label: ab.name });
+            if (B.boss.hp <= 0) break;
+          }
+          break;
+        }
+        case "chain": {
+          var targets = livingEnemies().sort(function (a, b) { return a.hp - b.hp; }).slice(0, ab.count);
+          targets.forEach(function (e) { if (e.alive) dealDamage(u, e, ab.mult, { canCrit: true, label: ab.name }); });
+          break;
+        }
+        case "heal": case "bigHeal": {
+          var ally = mostWoundedAlly();
+          if (ally) doHeal(u, ally, ab.heal, ab.name);
+          break;
+        }
+        case "buffAtk": {
+          livingHeroes().forEach(function (a) { a.buffRounds = ab.rounds; a.buffPct = ab.buff || 0.20; updateUnit(a); });
+          addLog("<b>" + u.name + "</b> sings <b>" + ab.name + "</b> — squad ATK up " + Math.round((ab.buff || 0.20) * 100) + "% for " + ab.rounds + " rounds.");
+          tel("action", { round: B.round, phase: B.phase + 1, actor: u.name, actorSide: "hero",
+            target: "Squad", ability: ab.name, damage: 0, heal: 0, crit: false, killed: false, buff: true });
+          break;
+        }
+        case "ward": {
+          var w = mostWoundedAlly();
+          if (w) {
+            applyShield(w, ab.shield);
+            addLog("<b>" + u.name + "</b> uses <b>" + ab.name + "</b> — " + w.name + " gains " + ab.shield + " shield.");
+            tel("action", { round: B.round, phase: B.phase + 1, actor: u.name, actorSide: "hero",
+              target: w.name, ability: ab.name, damage: 0, heal: 0, crit: false, killed: false, shield: ab.shield });
+            doHeal(u, w, ab.heal, ab.name);
+            updateUnit(w);
+          }
+          break;
+        }
+        case "auraShield": {
+          livingHeroes().forEach(function (a) { applyShield(a, ab.shield); updateUnit(a); });
+          addLog("<b>" + u.name + "</b> uses <b>" + ab.name + "</b> — the whole squad gains " + ab.shield + " shield.");
+          tel("action", { round: B.round, phase: B.phase + 1, actor: u.name, actorSide: "hero",
+            target: "Squad", ability: ab.name, damage: 0, heal: 0, crit: false, killed: false, shieldAll: ab.shield });
+          setTaunt(u, ab.name);
+          break;
+        }
+        case "healAll": {
+          var totalHealed = 0;
+          livingHeroes().forEach(function (a) {
+            var healed = Math.min(ab.heal, a.maxHp - a.hp);
+            if (B.synergy.choir) healed = Math.min(Math.round(ab.heal * 1.3), a.maxHp - a.hp);
+            a.hp += healed;
+            totalHealed += healed;
+            if (healed > 0) spawnPopup(a, "+" + healed, "heal");
+            updateUnit(a);
+          });
+          u.stats.healed += totalHealed;
+          chargeUlt(u, 5);
+          if (totalHealed > 0) sfx("heal");
+          addLog("<b>" + u.name + "</b> uses <b>" + ab.name + "</b> — the squad recovers " + totalHealed + " HP in total.");
+          tel("action", { round: B.round, phase: B.phase + 1, actor: u.name, actorSide: "hero",
+            target: "Squad", ability: ab.name, damage: 0, heal: totalHealed, crit: false, killed: false });
+          break;
+        }
+        case "buffDef": {
+          livingHeroes().forEach(function (a) { a.defBuffRounds = ab.rounds; a.defBuffPct = ab.buff || 0.25; updateUnit(a); });
+          addLog("<b>" + u.name + "</b> raises <b>" + ab.name + "</b> — squad DEF up " + Math.round((ab.buff || 0.25) * 100) + "% for " + ab.rounds + " rounds.");
+          tel("action", { round: B.round, phase: B.phase + 1, actor: u.name, actorSide: "hero",
+            target: "Squad", ability: ab.name, damage: 0, heal: 0, crit: false, killed: false, buff: true });
+          break;
+        }
+        case "weaken": {
+          B.boss.atkDebuffRounds = ab.rounds;
+          B.boss.atkDebuffPct = ab.buff || 0.20;
+          addLog("<b>" + u.name + "</b> sings <b>" + ab.name + "</b> — the King's ATK drops " + Math.round((ab.buff || 0.20) * 100) + "% for " + ab.rounds + " rounds.");
+          tel("action", { round: B.round, phase: B.phase + 1, actor: u.name, actorSide: "hero",
+            target: B.boss.name, ability: ab.name, damage: 0, heal: 0, crit: false, killed: false, debuff: true });
+          updateBossChrome();
+          break;
+        }
+      }
+    }
+
+    function heroAct(u) {
+      if (!u.alive) return;
+      B.actionSeq = (B.actionSeq || 0) + 1;
+      /* autoplay ultimate policy: fire during an Exposed window, or once the
+         King is below half health — otherwise hold for the player to time it.
+         With Auto-ult OFF, ultimates never fire on their own. */
+      if (u.ultReady && SETTINGS.autoUlt && (B.exposed || B.boss.hp <= B.boss.maxHp * 0.5)) { fireUlt(u, false); return; }
+      var ab = u.ability;
+      var ready = u.cd <= 0;
+      if (ready) {
+        var wounded = mostWoundedAlly();
+        var woundedPct = wounded ? wounded.hp / wounded.maxHp : 1;
+        switch (ab.kind) {
+          case "tauntShield": case "tauntHeal": case "auraShield": case "slamTaunt":
+            useAbility(u); return;
+          case "shieldAll":
+            if (B.round >= 2 || woundedPct < 0.9) { useAbility(u); return; }
+            break;
+          case "pierce": case "multi": case "aoe": case "chain": case "strike":
+            useAbility(u); return;
+          case "heal":
+            if (woundedPct < 0.80) { useAbility(u); return; }
+            break;
+          case "bigHeal":
+            if (woundedPct < 0.75) { useAbility(u); return; }
+            break;
+          case "healAll":
+            if (woundedPct < 0.85) { useAbility(u); return; }
+            break;
+          case "ward":
+            if (woundedPct < 0.90) { useAbility(u); return; }
+            break;
+          case "buffAtk": {
+            var buffed = livingHeroes().some(function (a) { return a.buffRounds > 0; });
+            if (!buffed) { useAbility(u); return; }
+            break;
+          }
+          case "buffDef": {
+            var warded = livingHeroes().some(function (a) { return a.defBuffRounds > 0; });
+            if (!warded) { useAbility(u); return; }
+            break;
+          }
+          case "weaken":
+            if (B.boss.atkDebuffRounds <= 0) { useAbility(u); return; }
+            break;
+        }
+      }
+      var t = heroTargetFor();
+      if (t) { animateUnit(u, "lunge"); dealDamage(u, t, 1, { canCrit: true }); }
+    }
+
+    function summonThralls(jobs, silent) {
+      var names = [];
+      jobs.forEach(function (job) {
+        var def = ADD_JOBS[job];
+        uidCounter++;
+        var th = {
+          uid: "u" + uidCounter, side: "enemy", isBoss: false, job: job, name: def.name,
+          maxHp: def.hp, hp: def.hp, atk: def.atk, effAtk: def.atk,
+          def: def.def, effDef: def.def, spd: def.spd,
+          shield: 0, cd: 0, taunt: 0, buffRounds: 0, defBuffRounds: 0, defBuffPct: 0, alive: true,
+          stats: { dealt: 0, healed: 0, taken: 0, kos: 0 }, el: null
+        };
+        B.thralls.push(th);
+        renderThrall(th);
+        names.push(def.name);
+        tel("add_spawn", { round: B.round, phase: B.phase + 1, job: job, name: def.name });
+      });
+      if (!silent) addLog("The Hollow King calls <b>" + names.join(" + ") + "</b> to his court.", "phase");
+    }
+    /* which jobs answer a summon, by phase — the mix is the priority puzzle */
+    function addMix() {
+      B.summonCount++;
+      if (B.phase === 3) return B.summonCount % 2 === 1 ? ["mend", "ward"] : ["ward", "thrall", "mend"];
+      if (B.phase === 0) return B.summonCount % 2 === 1 ? ["mend", "thrall"] : ["thrall", "thrall"];
+      return ["thrall", "mend"];
+    }
+
+    function setTelegraph(kind, text) {
+      B.telegraph = kind;
+      var el = $("telegraph-banner");
+      el.textContent = text;
+      el.classList.add("show");
+      addLog("<b>Telegraph:</b> " + text, "phase");
+      tel("telegraph_shown", { round: B.round, phase: B.phase + 1, attack: kind });
+      sfx("warn");
+    }
+    function hideTelegraph() {
+      var el = $("telegraph-banner");
+      if (el) el.classList.remove("show");
+    }
+
+    function bossAct(boss) {
+      if (!boss.alive) return;
+      boss.actionCount++;
+      /* a telegraphed attack lands now — the warning already played out */
+      if (B.telegraph) {
+        var tg = B.telegraph;
+        B.telegraph = null;
+        hideTelegraph();
+        animateUnit(boss, "lunge");
+        if (tg === "surge") {
+          var frailT = livingHeroes().sort(function (a, b) { return a.hp - b.hp; })[0];
+          if (frailT) {
+            addLog("<b>The Hollow King</b> unleashes <b>Hollow Surge</b> on " + frailT.name + "!", "phase");
+            dealDamage(boss, frailT, 1.5, { label: "Hollow Surge" });
+          }
+        } else if (tg === "slam") {
+          var slamT = enemyTarget();
+          if (slamT) {
+            addLog("<b>The Hollow King</b> brings the greatblade down — <b>Bulwark Slam</b> on " + slamT.name + "!", "phase");
+            dealDamage(boss, slamT, 1.7, { label: "Bulwark Slam" });
+          }
+        } else {
+          addLog("<b>The Hollow King</b> unleashes <b>Ashfall</b> — burning ash rains on the whole squad!", "phase");
+          var ap = B.phase;
+          livingHeroes().slice().forEach(function (h) {
+            if (h.alive) dealDamage(boss, h, ap === 3 ? 0.85 : 0.8, { label: "Ashfall" });
+          });
+        }
+        return;
+      }
+      animateUnit(boss, "lunge");
+      var phase = B.phase;
+      /* summon when the court is empty */
+      if ((phase === 0 || phase === 3) && B.summonCharges > 0 &&
+          B.thralls.every(function (t) { return !t.alive; })) {
+        B.summonCharges--;
+        summonThralls(addMix());
+        return;
+      }
+      /* Bulwark stance: every third action telegraphs the greatblade slam */
+      if (B.stance === "bulwark" && boss.actionCount % 3 === 0) {
+        setTelegraph("slam", "The Hollow King raises his greatblade… Bulwark Slam incoming!");
+        var tb = enemyTarget();
+        if (tb) dealDamage(boss, tb, 1, {});
+        return;
+      }
+      /* Hollow Surge is telegraphed one action ahead — the King inhales first */
+      if (phase >= 1 && boss.actionCount % 4 === 2) {
+        setTelegraph("surge", "The Hollow King inhales… Hollow Surge gathers on the frailest hero!");
+        var t1 = enemyTarget();
+        if (t1) dealDamage(boss, t1, 1, {});
+        return;
+      }
+      /* Ashfall is telegraphed one action ahead too — shields up, if you have them */
+      if ((phase === 1 && boss.actionCount % 3 === 0) || (phase === 3 && boss.actionCount % 4 === 0)) {
+        setTelegraph("ashfall", "The Hollow King inhales… Ashfall incoming!");
+        var t2 = enemyTarget();
+        if (t2) dealDamage(boss, t2, 1, {});
+        return;
+      }
+      var t = enemyTarget();
+      if (t) dealDamage(boss, t, 1, {});
+    }
+
+    function thrallAct(u) {
+      if (!u.alive) return;
+      var t = enemyTarget();
+      if (t) { animateUnit(u, "lunge"); dealDamage(u, t, 1, {}); }
+    }
+
+    function showStanceBanner(html, ms) {
+      if (B.skipping) return;
+      var el = $("stance-banner");
+      el.innerHTML = html;
+      el.classList.add("show");
+      clearTimeout(showStanceBanner._t);
+      showStanceBanner._t = setTimeout(function () { el.classList.remove("show"); }, ms || 2100);
+    }
+    function setStance(key, reason) {
+      if (B.stance === key) { updateBossChrome(); return; }
+      var from = B.stance;
+      B.stance = key;
+      tel("stance_change", { round: B.round, phase: B.phase + 1, from: from, to: key, reason: reason });
+      addLog("The King shifts stance — <b>" + STANCES[key].name + "</b>. " + STANCES[key].fx + ".", "phase");
+      if (reason === "mid_phase_shift") {
+        showStanceBanner("Stance shift — the King becomes <b>" + STANCES[key].name + "</b>");
+        sfx("horn");
+        shakeArena(0.5);
+      }
+      updateBossChrome();
+    }
+
+    function checkPhase() {
+      if (!B.boss.alive && B.boss.hp > 0) return;
+      var p = phaseOf(Math.max(0, B.boss.hp));
+      if (p !== B.phase && B.boss.hp > 0) {
+        var from = B.phase;
+        B.phase = p;
+        B.phaseRounds = 0;
+        B.enrage = 0;
+        if (p === 3) B.summonCharges = 2;
+        addLog("The Hollow King enters <b>Phase " + (p + 1) + " — " + PHASES[p].name + "</b>. " + PHASES[p].desc, "phase");
+        addLog("<i>“" + TAUNTS[from].fall + "”</i>", "sys");
+        tel("phase_change", { round: B.round, fromPhase: from + 1, toPhase: p + 1, bossHp: Math.max(0, B.boss.hp) });
+        setStance(PHASE_STANCE[p], "phase_change");
+        showPhaseBanner(p, pickLine(TAUNTS[p].enter));
+        sfx("horn");
+        shakeArena(1);
+        updateBossChrome();
+      }
+    }
+
+    function startRound() {
+      B.round++;
+      B.phaseRounds++;
+      /* end-of-round durations tick down as the new round begins */
+      if (B.round > 1) {
+        B.heroes.forEach(function (u) {
+          if (u.taunt > 0) u.taunt--;
+          if (u.buffRounds > 0) u.buffRounds--;
+          if (u.defBuffRounds > 0) u.defBuffRounds--;
+          if (u.taunt <= 0 && B.tauntTargetId === u.uid) B.tauntTargetId = null;
+        });
+        if (B.boss.atkDebuffRounds > 0) B.boss.atkDebuffRounds--;
+      }
+      /* enrage — the King's damage climbs the longer any phase drags on */
+      if (B.phase === 1 && B.phaseRounds > 6) {
+        B.enrage++;
+        addLog("Ashfall thickens — the King's fury grows (<b>+" + (B.enrage * 15) + "% damage</b>).", "phase");
+      } else if (B.phase === 2 && B.phaseRounds > 4) {
+        B.enrage++;
+        addLog("The Long Night deepens — the King's fury grows (<b>+" + (B.enrage * 15) + "% damage</b>).", "phase");
+      } else if (B.phase === 3 && B.phaseRounds > 3) {
+        B.enrage++;
+        addLog("The Hollow Crown blazes — the King's fury grows (<b>+" + (B.enrage * 15) + "% damage</b>).", "phase");
+      }
+      if (B.round > 40) { B.enrage += 2; }
+
+      /* mid-phase stance shift — telegraphed one round ahead, then applied */
+      var shiftTo = STANCE_SHIFT[B.phase];
+      if (shiftTo && B.phaseRounds === SHIFT_AT_PHASE_ROUNDS - 1 && B.stance !== shiftTo) {
+        addLog("The King's stance wavers — <b>" + STANCES[B.stance].name + "</b> gives way to <b>" + STANCES[shiftTo].name + "</b> next round.", "phase");
+        showStanceBanner("The King's stance wavers — <b>" + STANCES[shiftTo].name + "</b> next round");
+        sfx("warn");
+      }
+      if (shiftTo && B.phaseRounds === SHIFT_AT_PHASE_ROUNDS && B.stance !== shiftTo) {
+        setStance(shiftTo, "mid_phase_shift");
+      }
+
+      /* a round with no squad damage anywhere breaks the combo chain */
+      if (B.combo.count > 0 && B.combo.lastDamageRound < B.round - 1) {
+        B.combo.count = 0;
+        B.combo.lastHeroUid = null;
+        B.combo.logged = {};
+        updateComboUI();
+      }
+
+      addLog("— Round " + B.round + " —", "sys");
+      $("round-tag").textContent = "Round " + B.round + " · Phase " + (B.phase + 1);
+      tel("round", { round: B.round, phase: B.phase + 1, bossHp: Math.max(0, B.boss.hp),
+        heroesAlive: livingHeroes().length });
+
+      /* Exposed cycle — every 6 rounds the King's guard drops for 2 rounds */
+      var wasExposed = B.exposed;
+      B.exposed = (B.round % 6 === 5 || B.round % 6 === 0);
+      if (B.exposed && !wasExposed) {
+        tel("exposed_window", { round: B.round, phase: B.phase + 1, bossHp: Math.max(0, B.boss.hp) });
+        addLog("The Hollow King's guard drops — he is <b>EXPOSED</b> and takes +50% damage for 2 rounds. Fire ultimates now!", "good");
+        sfx("expose");
+      } else if (!B.exposed && wasExposed) {
+        addLog("The King raises his guard again.", "sys");
+      }
+      /* ultimates still charged at the round's start were held, not fired */
+      B.heroes.forEach(function (u) {
+        if (u.alive && u.ultReady && u.ultReadyRound < B.round) {
+          tel("ult_held", { round: B.round, phase: B.phase + 1, hero: u.name, heldRounds: B.round - u.ultReadyRound });
+        }
+      });
+
+      /* Creeping Ash mutator */
+      if (B.mut.ash && B.round >= 2) {
+        addLog("<b>Creeping Ash</b> seeps into the court — every hero takes 3 damage.", "phase");
+        livingHeroes().slice().forEach(function (h) {
+          var absorbed = Math.min(h.shield, 3);
+          h.shield -= absorbed;
+          h.hp -= (3 - absorbed);
+          h.stats.taken += 3;
+          spawnPopup(h, "-3", "hurt");
+          if (h.hp <= 0 && h.alive) {
+            h.hp = 0; h.alive = false;
+            addLog("<b>" + h.name + "</b> succumbs to the ash!", "phase");
+            tel("death", { round: B.round, phase: B.phase + 1, unit: h.name, side: "hero", by: "Creeping Ash" });
+          }
+          updateUnit(h);
+        });
+        tel("mutator_tick", { round: B.round, mutator: "Creeping Ash", damagePerHero: 3 });
+        if (checkEnd()) return;
+      }
+
+      /* add jobs tick — a living Mend heals the King, a living Ward shields
+         him. This is why target priority is a decision, not a habit. */
+      B.thralls.forEach(function (th) {
+        if (!th.alive || !B.boss.alive) return;
+        if (th.job === "mend") {
+          var mHealed = Math.min(30, B.boss.maxHp - B.boss.hp);
+          if (mHealed > 0) {
+            B.boss.hp += mHealed;
+            spawnPopup(B.boss, "+" + mHealed, "heal");
+            addLog("<b>" + th.name + "</b> mends the King — he recovers " + mHealed + " HP.");
+            tel("action", { round: B.round, phase: B.phase + 1, actor: th.name, actorSide: "enemy",
+              target: B.boss.name, ability: "Mend (job)", damage: 0, heal: mHealed, crit: false, killed: false });
+            updateUnit(B.boss);
+          }
+        } else if (th.job === "ward") {
+          applyShield(B.boss, 20);
+          addLog("<b>" + th.name + "</b> wards the King — +20 shield.");
+          tel("action", { round: B.round, phase: B.phase + 1, actor: th.name, actorSide: "enemy",
+            target: B.boss.name, ability: "Ward (job)", damage: 0, heal: 0, crit: false, killed: false, shield: 20 });
+          updateUnit(B.boss);
+        }
+      });
+
+      /* Oracle stance — the King knits his wounds and shields his court */
+      if (B.stance === "oracle" && B.boss.alive && B.round > 1) {
+        var oHealed = Math.min(40, B.boss.maxHp - B.boss.hp);
+        if (oHealed > 0) {
+          B.boss.hp += oHealed;
+          spawnPopup(B.boss, "+" + oHealed, "heal");
+        }
+        B.thralls.forEach(function (th) { if (th.alive) { applyShield(th, 15); updateUnit(th); } });
+        addLog("<b>Oracle stance</b> — the King restores " + oHealed + " HP and shields his court.", "phase");
+        tel("action", { round: B.round, phase: B.phase + 1, actor: B.boss.name, actorSide: "enemy",
+          target: B.boss.name, ability: "Oracle stance", damage: 0, heal: oHealed, crit: false, killed: false });
+        updateUnit(B.boss);
+      }
+
+      var all = B.heroes.concat([B.boss], B.thralls).filter(function (u) { return u.alive; });
+      all.sort(function (a, b) { return (b.spd + rng() * 1.5) - (a.spd + rng() * 1.5); });
+      B.queue = all.slice();
+      B.heroes.forEach(updateUnit);
+      updateBossChrome();
+    }
+
+    function checkEnd() {
+      if (B.over) return true;
+      if (B.boss.hp <= 0 || !B.boss.alive) { endBattle(true, false); return true; }
+      if (livingHeroes().length === 0) { endBattle(false, false); return true; }
+      return false;
+    }
+
+    function stepOnce() {
+      if (B.over) return;
+      while (B.queue.length && !B.queue[0].alive) B.queue.shift();
+      if (!B.queue.length) {
+        startRound();
+        if (B.over) return;
+        while (B.queue.length && !B.queue[0].alive) B.queue.shift();
+        if (!B.queue.length) return;
+      }
+      var actor = B.queue.shift();
+      if (!actor.alive) return;
+      if (actor.side === "hero" && actor.cd > 0) actor.cd--;
+      document.querySelectorAll(".unit.acting").forEach(function (el) { el.classList.remove("acting"); });
+      if (actor.el) actor.el.classList.add("acting");
+      if (actor.side === "hero") heroAct(actor);
+      else if (actor.isBoss) bossAct(actor);
+      else thrallAct(actor);
+      checkEnd();
+    }
+
+    function tick() {
+      if (!B || B.over || B.paused) return;
+      stepOnce();
+      if (B.over) return;
+      B.timer = setTimeout(tick, B.speedMs);
+    }
+    function scheduleNext(delay) {
+      if (!B || B.over) return;
+      clearTimeout(B.timer);
+      B.timer = setTimeout(tick, delay != null ? delay : B.speedMs);
+    }
+
+    /* ---------- battle rendering ---------- */
+    function unitEl(u, kind) {
+      var wrap = document.createElement("div");
+      wrap.className = "unit " + kind + (u.side === "enemy" ? " enemy" : "") +
+        (kind === "thrall" ? " add-" + (u.job || "thrall") : "");
+      wrap.id = "unit-" + u.uid;
+      var icon = u.isBoss ? ICONS.crown
+        : (kind === "thrall" ? ICONS[ADD_JOBS[u.job || "thrall"].icon] : ICONS[u.role]);
+      var sub = u.isBoss ? "" : (kind === "thrall" ? ADD_JOBS[u.job || "thrall"].sub : ROLE_LABEL[u.role]);
+      wrap.innerHTML =
+        '<div class="badges"></div>' +
+        '<div class="token ' + (u.isBoss || kind === "thrall" ? "" : u.role) + '">' + icon + "</div>" +
+        '<div class="u-name">' + u.name + "</div>" +
+        '<div class="u-sub">' + sub + "</div>" +
+        (u.isBoss ? '<div><span class="stance-tag"></span><span class="stance-fx"></span></div>' : "") +
+        '<div class="hpbar"><div class="hpfill"></div><div class="shieldfill"></div></div>' +
+        '<div class="hptext"></div>';
+      if (kind === "hero") {
+        wrap.innerHTML += '<div class="ultbar"><div class="ultfill"></div></div>' +
+          '<button type="button" class="ult-btn">ULT</button>';
+        wrap.querySelector(".ult-btn").addEventListener("click", function () { SFX.ensure(); fireUlt(u, true); });
+      }
+      if (u.side === "enemy") {
+        wrap.title = "Tap to focus fire — tap again to release";
+        wrap.addEventListener("click", function () { onEnemyTap(u); });
+      }
+      u.el = wrap;
+      return wrap;
+    }
+    function renderThrall(th) {
+      var row = $("adds-row");
+      if (row) row.appendChild(unitEl(th, "thrall"));
+      updateUnit(th);
+    }
+    function updateUnit(u) {
+      if (!u.el) return;
+      var pct = Math.max(0, (u.hp / u.maxHp) * 100);
+      u.el.querySelector(".hpfill").style.width = pct + "%";
+      var spct = Math.min(100, (u.shield / u.maxHp) * 100);
+      u.el.querySelector(".shieldfill").style.width = spct + "%";
+      u.el.querySelector(".hptext").textContent =
+        Math.max(0, Math.ceil(u.hp)) + (u.shield > 0 ? " (+" + u.shield + " shield)" : "") + " / " + u.maxHp;
+      u.el.classList.toggle("dead", !u.alive);
+      u.el.classList.toggle("exposed", !!(u.isBoss && B.exposed && u.alive));
+      u.el.classList.toggle("focused", !!(u.alive && B.focusId === u.uid));
+      var badges = u.el.querySelector(".badges");
+      var html = "";
+      if (u.alive && B.focusId === u.uid) html += '<span class="badge focus">◎ FOCUS</span>';
+      if (u.alive && u.taunt > 0) html += '<span class="badge taunt">TAUNT</span>';
+      if (u.alive && u.isBoss && B.exposed) html += '<span class="badge exposed">EXPOSED +50%</span>';
+      if (u.alive && u.isBoss && u.atkDebuffRounds > 0) html += '<span class="badge weakened">WEAKENED ' + u.atkDebuffRounds + '</span>';
+      if (u.alive && u.buffRounds > 0) html += '<span class="badge buff">HYMN ' + u.buffRounds + '</span>';
+      if (u.alive && u.defBuffRounds > 0) html += '<span class="badge aegis">AEGIS ' + u.defBuffRounds + '</span>';
+      if (u.alive && u.side === "hero" && u.cd > 0) html += '<span class="badge cd">ABILITY ' + u.cd + '</span>';
+      badges.innerHTML = html;
+      if (u.isBoss) {
+        var st = STANCES[B.stance];
+        var tag = u.el.querySelector(".stance-tag");
+        if (tag && st) {
+          tag.className = "stance-tag st-" + B.stance;
+          tag.innerHTML = ICONS[st.icon] + st.name + " stance";
+        }
+        var fx = u.el.querySelector(".stance-fx");
+        if (fx && st) fx.textContent = st.fx;
+      }
+      var sub = u.el.querySelector(".u-sub");
+      if (sub && u.isBoss) sub.textContent = "Phase " + (B.phase + 1) + " — " + PHASES[B.phase].name + (B.enrage > 0 ? " · Fury +" + (B.enrage * 15) + "%" : "");
+      if (u.side === "hero") {
+        var uf = u.el.querySelector(".ultfill");
+        if (uf) uf.style.width = (u.ultReady ? 100 : Math.round(u.ult || 0)) + "%";
+        var ub = u.el.querySelector(".ult-btn");
+        if (ub) {
+          ub.classList.toggle("ready", !!(u.ultReady && u.alive));
+          ub.textContent = u.ultReady ? "ULT — " + u.ultDef.name : "ULT";
+        }
+      }
+    }
+    function updateBossChrome() {
+      if (!B || !B.boss.el) return;
+      updateUnit(B.boss);
+      var pips = B.boss.el.querySelectorAll(".phase-pips i");
+      pips.forEach(function (pip, i) {
+        pip.className = i < B.phase ? "done" : (i === B.phase ? "now" : "");
+      });
+    }
+    function showPhaseBanner(p, taunt) {
+      if (B.skipping) return;
+      $("pb-kicker").textContent = "Phase " + (p + 1) + " of 4";
+      $("pb-name").textContent = PHASES[p].name;
+      $("pb-desc").textContent = PHASES[p].desc;
+      $("pb-taunt").textContent = taunt ? "“" + taunt + "”" : "";
+      var banner = $("phase-banner");
+      banner.classList.add("show");
+      clearTimeout(showPhaseBanner._t);
+      showPhaseBanner._t = setTimeout(function () { banner.classList.remove("show"); }, 1700);
+    }
+
+    function renderBattle() {
+      var ez = $("enemy-zone");
+      ez.innerHTML = "";
+      var bossWrap = document.createElement("div");
+      bossWrap.style.display = "flex"; bossWrap.style.flexDirection = "column"; bossWrap.style.alignItems = "center";
+      var pips = document.createElement("div");
+      pips.className = "phase-pips";
+      pips.innerHTML = "<i></i><i></i><i></i><i></i>";
+      var bossEl = unitEl(B.boss, "boss");
+      bossEl.insertBefore(pips, bossEl.firstChild);
+      bossWrap.appendChild(bossEl);
+      ez.appendChild(bossWrap);
+      var adds = document.createElement("div");
+      adds.className = "adds-row"; adds.id = "adds-row";
+      ez.appendChild(adds);
+
+      var pz = $("party-zone");
+      pz.innerHTML = "";
+      B.heroes.forEach(function (u) { pz.appendChild(unitEl(u, "hero")); });
+      B.all.forEach(updateUnit);
+      updateBossChrome();
+      refreshFocusUI();
+      updateComboUI();
+    }
+
+    function makeHeroUnit(h, counts) {
+      uidCounter++;
+      var defMult = SYNERGIES[1].test(counts) ? 1.15 : 1;
+      var atkMult = SYNERGIES[2].test(counts) ? 1.12 : 1;
+      return {
+        uid: "u" + uidCounter, heroId: h.id, side: "hero", isBoss: false,
+        name: h.name, role: h.role, ability: heroAbility(h),
+        maxHp: h.hp, hp: h.hp, atk: h.atk, effAtk: Math.round(h.atk * atkMult),
+        def: h.def, effDef: Math.round(h.def * defMult), spd: h.spd,
+        shield: 0, cd: 0, taunt: 0, buffRounds: 0, buffPct: 0,
+        defBuffRounds: 0, defBuffPct: 0, alive: true,
+        ultDef: heroUlt(h), ult: 0, ultReady: false, ultReadyRound: 0,
+        stats: { dealt: 0, healed: 0, taken: 0, kos: 0 }, el: null
+      };
+    }
+
+    function startBattle(squadIds) {
+      rngState = (Date.now() % 2147483647) + 12345;
+      lastSquad = squadIds.slice();
+      var counts = roleCounts(squadIds);
+      var heroes = squadIds.map(function (id) { return makeHeroUnit(HERO_BY_ID[id], counts); });
+      var synergy = {};
+      SYNERGIES.forEach(function (s) { synergy[s.id] = s.test(counts); });
+      if (synergy.bulwark) heroes.forEach(function (u) { u.shield = 25; });
+
+      uidCounter++;
+      var boss = {
+        uid: "u" + uidCounter, side: "enemy", isBoss: true, name: BOSS.name,
+        maxHp: BOSS.hp, hp: BOSS.hp, atk: BOSS.atk, effAtk: BOSS.atk,
+        def: BOSS.def, effDef: BOSS.def, spd: BOSS.spd,
+        shield: 0, cd: 0, taunt: 0, buffRounds: 0, alive: true, actionCount: 0,
+        atkDebuffRounds: 0, atkDebuffPct: 0,
+        stats: { dealt: 0, healed: 0, taken: 0, kos: 0 }, el: null
+      };
+
+      B = {
+        heroes: heroes, boss: boss, thralls: [], all: heroes.concat([boss]),
+        queue: [], round: 0, phase: 0, phaseRounds: 0, enrage: 0,
+        summonCharges: 2, tauntTargetId: null,
+        stance: PHASE_STANCE[0], focusId: null, summonCount: 0,
+        combo: { count: 0, lastHeroUid: null, lastDamageRound: 0, actionKey: null, logged: {} },
+        comboBank: 0, actionSeq: 0,
+        mut: { glass: mutators.glass, ash: mutators.ash },
+        synergy: synergy, over: false, paused: false, skipping: false,
+        exposed: false, telegraph: null, speedMult: 1,
+        speedMs: 340, timer: null, startedAt: Date.now(), result: null
+      };
+
+      var isFirstBattle = !telEvents.some(function (e) { return e.type === "battle_start"; });
+      tel("battle_start", {
+        squad: squadIds.slice(),
+        squadNames: squadIds.map(function (id) { return HERO_BY_ID[id].name; }),
+        loadouts: loadoutSnapshot(squadIds),
+        stanceOrder: PHASE_STANCE.slice(),
+        autoUlt: SETTINGS.autoUlt,
+        mutators: { glass: B.mut.glass, ash: B.mut.ash },
+        draftMs: Date.now() - draftEnteredAt,
+        synergies: Object.keys(synergy).filter(function (k) { return synergy[k]; })
+      });
+      tel("stance_change", { round: 0, phase: 1, from: null, to: B.stance, reason: "battle_start" });
+
+      showScreen("battle");
+      $("battle-log").innerHTML = "";
+      $("round-tag").textContent = "Round 1 · Phase 1";
+      setSpeedUI(1);
+      $("btn-pause").textContent = "Pause";
+      renderBattle();
+
+      addLog("Your squad enters the court. <b>The Hollow King</b> rises — " + BOSS.hp.toLocaleString() + " HP across four phases.", "sys");
+      SYNERGIES.forEach(function (s) {
+        if (synergy[s.id]) addLog("Synergy active: <b>" + s.name + "</b> — " + s.desc + ".", "good");
+      });
+      if (B.mut.glass) addLog("Mutator: <b>Glass Court</b> — all damage +35%, both sides.", "phase");
+      if (B.mut.ash) addLog("Mutator: <b>Creeping Ash</b> — 3 damage to every hero each round.", "phase");
+
+      showPhaseBanner(0, pickLine(TAUNTS[0].enter));
+      hideTelegraph();
+      addLog("The King opens in <b>" + STANCES[B.stance].name + " stance</b> — " + STANCES[B.stance].fx + ".", "phase");
+      summonThralls(["thrall", "thrall"], true);
+      addLog("The King calls <b>2 Hollow Thralls</b> to his court.", "phase");
+      if (isFirstBattle) {
+        addLog("<b>Tip:</b> tap any enemy to focus fire on it — tap again (or the gold chip) to release. Kill Mend adds first: they heal the King every round.", "sys");
+        var hint = $("focus-hint");
+        hint.classList.add("show");
+        setTimeout(function () { hint.classList.remove("show"); }, 6000);
+      }
+      scheduleNext(1500);
+    }
+
+    function endBattle(victory, abandoned) {
+      if (B.over) return;
+      B.over = true;
+      B.result = victory ? "victory" : "defeat";
+      clearTimeout(B.timer);
+      B.telegraph = null;
+      hideTelegraph();
+      $("stance-banner").classList.remove("show");
+      $("focus-hint").classList.remove("show");
+      if (!B.skipping) {
+        /* cinematic beat: stinger, fullscreen flash, brief slow-motion */
+        sfx(victory ? "win" : "lose");
+        flashScreen(victory);
+        $("arena").classList.add("slowmo");
+        setTimeout(function () { $("arena").classList.remove("slowmo"); }, 1300);
+        if (victory) addLog("<i>“" + TAUNTS[3].fall + "”</i>", "sys");
+      }
+      var durationMs = Date.now() - B.startedAt;
+      var phasesCleared = victory ? 4 : B.phase;
+      var tokens = 0;
+      var rank = null;
+      if (victory) {
+        rank = B.round <= 20 ? "S" : (B.round <= 26 ? "A" : "B");
+        tokens = 50 + (rank === "S" ? 25 : rank === "A" ? 15 : 5);
+        if (B.mut.glass || B.mut.ash) tokens += 15;
+      } else {
+        tokens = abandoned ? 0 : phasesCleared * 12;
+      }
+      sessionTokens += tokens;
+      $("token-count").textContent = sessionTokens;
+
+      tel("battle_end", {
+        result: B.result, abandoned: !!abandoned, rounds: B.round,
+        phaseReached: B.phase + 1, phasesCleared: phasesCleared,
+        durationMs: durationMs, rank: rank, tokensEarned: tokens,
+        mutators: { glass: B.mut.glass, ash: B.mut.ash },
+        squad: lastSquad ? lastSquad.slice() : [],
+        survivors: livingHeroes().map(function (u) { return u.name; })
+      });
+      B.finalStats = { victory: victory, abandoned: !!abandoned, tokens: tokens, rank: rank, durationMs: durationMs };
+      if (!B.skipping) {
+        setTimeout(function () { renderResults(); }, victory ? 1100 : 1400);
+      }
+    }
+
+    /* ================= results ================= */
+    function fmtDuration(ms) {
+      var s = Math.round(ms / 1000);
+      return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0");
+    }
+    function renderResults() {
+      if (!B || !B.finalStats) return;
+      var fs = B.finalStats;
+      var hero = $("result-hero");
+      if (fs.victory) {
+        hero.className = "result-hero win";
+        hero.innerHTML =
+          '<div class="r-kicker">The Hollow King has fallen</div>' +
+          "<h1>Victory — Rank " + fs.rank + "</h1>" +
+          '<div class="r-sub">' + (fs.rank === "S" ? "Flawless tempo. The comp was solved before the first blow."
+            : fs.rank === "A" ? "A clean clear. Small comp tweaks could shave a round or two."
+            : "A clear is a clear — but the King made you work for it.") + "</div>" +
+          '<div class="result-stats">' +
+            '<div class="rstat"><b>' + B.round + '</b><span>Rounds</span></div>' +
+            '<div class="rstat"><b>' + livingHeroes().length + ' / 5</b><span>Standing</span></div>' +
+            '<div class="rstat"><b>' + fmtDuration(fs.durationMs) + '</b><span>Battle time</span></div>' +
+            '<div class="rstat"><b>+' + fs.tokens + '</b><span>Tokens earned</span></div>' +
+          "</div>";
+      } else {
+        hero.className = "result-hero lose";
+        hero.innerHTML =
+          '<div class="r-kicker">' + (fs.abandoned ? "The squad withdrew" : "The court goes dark") + "</div>" +
+          "<h1>" + (fs.abandoned ? "Battle abandoned" : "Defeat — Phase " + (B.phase + 1)) + "</h1>" +
+          '<div class="r-sub">The squad fell in <b>' + PHASES[B.phase].name + "</b>. " +
+            (B.phase === 0 ? "The thralls overwhelmed the front line — more AoE or a second tank helps."
+            : B.phase === 1 ? "Ashfall punishes a thin support line — shields and healing keep pace with it."
+            : B.phase === 2 ? "The Long Night is a damage race — if the enrage stacks, the comp needs more burst."
+            : "So close. The final form demands everything at once: taunt discipline, burst, and one heal in reserve.") + "</div>" +
+          '<div class="result-stats">' +
+            '<div class="rstat"><b>' + B.round + '</b><span>Rounds</span></div>' +
+            '<div class="rstat"><b>' + (B.phase + 1) + ' / 4</b><span>Phase reached</span></div>' +
+            '<div class="rstat"><b>' + Math.max(0, B.boss.hp) + '</b><span>King HP left</span></div>' +
+            '<div class="rstat"><b>+' + fs.tokens + '</b><span>Tokens earned</span></div>' +
+          "</div>";
+      }
+
+      var bd = $("breakdown");
+      bd.innerHTML = "";
+      var maxDmg = Math.max(1, Math.max.apply(null, B.heroes.map(function (u) { return u.stats.dealt; })));
+      B.heroes.slice().sort(function (a, b) { return b.stats.dealt - a.stats.dealt; }).forEach(function (u) {
+        var row = document.createElement("div");
+        row.className = "bd-row";
+        row.innerHTML =
+          '<span class="avatar ' + u.role + '">' + ICONS[u.role] + "</span>" +
+          '<span class="bd-name">' + u.name + "<small>" + ROLE_LABEL[u.role] + " · " +
+            (u.alive ? 'Standing, ' + Math.ceil(u.hp) + " HP left" : '<span class="ko">Knocked out</span>') + "</small></span>" +
+          '<span class="bd-nums">' +
+            "<div><b>" + u.stats.dealt + "</b><span>Damage</span></div>" +
+            "<div><b>" + u.stats.healed + "</b><span>Healing</span></div>" +
+            "<div><b>" + u.stats.taken + "</b><span>Taken</span></div>" +
+            "<div><b>" + u.stats.kos + "</b><span>KOs</span></div>" +
+          "</span>" +
+          '<span class="dmgbar"><i style="width:' + Math.round((u.stats.dealt / maxDmg) * 100) + '%"></i></span>';
+        bd.appendChild(row);
+      });
+      $("result-note").textContent = "Session tokens so far: " + sessionTokens + ". Retry runs the same squad and mutators; Draft again takes you back to the roster.";
+      showScreen("results");
+    }
+
+    /* ================= data lab ================= */
+    function collectRuns() {
+      var runs = [];
+      var open = null;
+      telEvents.forEach(function (ev) {
+        if (ev.type === "battle_start") {
+          open = { startedAt: ev.t, squad: ev.squad || [], squadNames: ev.squadNames || [],
+            mutators: ev.mutators || {}, draftMs: ev.draftMs || 0, loadouts: ev.loadouts || null };
+        } else if (ev.type === "battle_end") {
+          var run = open || { startedAt: ev.t, squad: ev.squad || [], squadNames: [], mutators: ev.mutators || {} };
+          run.result = ev.result; run.rounds = ev.rounds; run.phaseReached = ev.phaseReached;
+          run.durationMs = ev.durationMs; run.rank = ev.rank; run.tokensEarned = ev.tokensEarned;
+          run.abandoned = !!ev.abandoned;
+          runs.push(run);
+          open = null;
+        }
+      });
+      return runs;
+    }
+    function renderLab() {
+      var runs = collectRuns();
+      var wins = runs.filter(function (r) { return r.result === "victory"; });
+      var losses = runs.filter(function (r) { return r.result === "defeat"; });
+
+      /* summary */
+      var avgTurns = wins.length ? (wins.reduce(function (s, r) { return s + r.rounds; }, 0) / wins.length) : 0;
+      $("lab-summary").innerHTML =
+        '<div class="rstat dark"><b>' + runs.length + '</b><span>Battles</span></div>' +
+        '<div class="rstat dark"><b>' + (runs.length ? Math.round((wins.length / runs.length) * 100) + "%" : "—") + '</b><span>Win rate</span></div>' +
+        '<div class="rstat dark"><b>' + (wins.length ? avgTurns.toFixed(1) : "—") + '</b><span>Avg rounds to win</span></div>' +
+        '<div class="rstat dark"><b>' + telEvents.length + '</b><span>Events logged</span></div>';
+
+      /* per-hero table */
+      var tbody = $("lab-heroes");
+      tbody.innerHTML = "";
+      if (!runs.length) {
+        tbody.innerHTML = '<tr><td colspan="5" class="lab-empty">No battles yet — draft a squad and fight the King first.</td></tr>';
+      } else {
+        HEROES.map(function (h) {
+          var picked = runs.filter(function (r) { return r.squad.indexOf(h.id) >= 0; });
+          var won = picked.filter(function (r) { return r.result === "victory"; });
+          return { h: h, picks: picked.length, wins: won.length };
+        }).sort(function (a, b) { return b.picks - a.picks; }).forEach(function (row) {
+          var tr = document.createElement("tr");
+          tr.innerHTML =
+            "<td><b>" + row.h.name + "</b> <span class='lab-role " + row.h.role + "'>" + ROLE_LABEL[row.h.role] + "</span></td>" +
+            "<td>" + row.picks + "</td>" +
+            "<td>" + Math.round((row.picks / runs.length) * 100) + "%</td>" +
+            "<td>" + row.wins + "</td>" +
+            "<td>" + (row.picks ? Math.round((row.wins / row.picks) * 100) + "%" : "—") + "</td>";
+          tbody.appendChild(tr);
+        });
+      }
+
+      /* loadout popularity — which variants actually get brought */
+      var loHost = $("lab-loadouts");
+      if (loHost) {
+        loHost.innerHTML = "";
+        var loRuns = runs.filter(function (r) { return r.loadouts; });
+        if (!loRuns.length) {
+          loHost.innerHTML = '<p class="hint" style="margin:0;">No loadout data yet — it\'s recorded from your next battle on.</p>';
+        } else {
+          HEROES.forEach(function (h) {
+            var counts = { a0: 0, a1: 0, u0: 0, u1: 0, total: 0 };
+            loRuns.forEach(function (r) {
+              var lo = r.loadouts[h.id];
+              if (!lo) return;
+              counts.total++;
+              counts[lo.ability === 1 ? "a1" : "a0"]++;
+              counts[lo.ult === 1 ? "u1" : "u0"]++;
+            });
+            if (!counts.total) return;
+            var row = document.createElement("div");
+            row.className = "phase-row";
+            row.innerHTML =
+              '<span class="phase-label">' + h.name + ' <span class="lab-role ' + h.role + '">' + ROLE_LABEL[h.role] + '</span></span>' +
+              '<span style="font-size:.9rem; color:var(--muted);">Ability — ' + h.abilities[0].name + " ×" + counts.a0 +
+              " · " + h.abilities[1].name + " ×" + counts.a1 +
+              " &nbsp;|&nbsp; Ult — " + h.ults[0].name + " ×" + counts.u0 +
+              " · " + h.ults[1].name + " ×" + counts.u1 + "</span>";
+            loHost.appendChild(row);
+          });
+          if (!loHost.children.length) {
+            loHost.innerHTML = '<p class="hint" style="margin:0;">No loadout data yet.</p>';
+          }
+        }
+      }
+
+      /* defeat analysis */
+      var dHost = $("lab-defeats");
+      dHost.innerHTML = "";
+      if (!losses.length) {
+        dHost.innerHTML = '<p class="hint" style="margin:0;">No defeats logged yet. Either you\'re very good, or you haven\'t pushed a mutator run.</p>';
+      } else {
+        var byPhase = [0, 0, 0, 0];
+        losses.forEach(function (r) { byPhase[Math.min(4, Math.max(1, r.phaseReached || 1)) - 1]++; });
+        var maxP = Math.max.apply(null, byPhase);
+        PHASES.forEach(function (p, i) {
+          var row = document.createElement("div");
+          row.className = "phase-row";
+          row.innerHTML =
+            '<span class="phase-label">Phase ' + (i + 1) + " — " + p.name + "</span>" +
+            '<span class="phase-bar"><i style="width:' + (maxP ? Math.round((byPhase[i] / maxP) * 100) : 0) + '%"></i></span>' +
+            "<b>" + byPhase[i] + "</b>";
+          dHost.appendChild(row);
+        });
+        var worst = byPhase.indexOf(maxP);
+        var note = document.createElement("p");
+        note.className = "hint";
+        note.style.margin = "10px 0 0";
+        note.textContent = "Most lethal: Phase " + (worst + 1) + " — " + PHASES[worst].name + " (" + maxP + " of " + losses.length + " defeats). " +
+          (worst === 0 ? "Squads are dying to thralls — check tank coverage and AoE."
+          : worst === 1 ? "Ashfall is the wall — more support or shields should move this."
+          : worst === 2 ? "The enrage is winning the race — comps need more burst damage."
+          : "Final-form deaths are good deaths — the comp is nearly there.");
+        dHost.appendChild(note);
+      }
+
+      /* session history */
+      var hist = $("lab-history");
+      hist.innerHTML = "";
+      if (!runs.length) {
+        hist.innerHTML = '<p class="hint" style="margin:0;">Nothing yet. Your battles will appear here, newest first, and survive page reloads.</p>';
+      } else {
+        runs.slice().reverse().forEach(function (r) {
+          var d = new Date(r.startedAt);
+          var when = d.toLocaleDateString(undefined, { month: "short", day: "numeric" }) + " " +
+                     d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+          var muts = [];
+          if (r.mutators.glass) muts.push("Glass Court");
+          if (r.mutators.ash) muts.push("Creeping Ash");
+          var item = document.createElement("div");
+          item.className = "hist-row";
+          item.innerHTML =
+            '<span class="hist-badge ' + (r.result === "victory" ? "win" : "lose") + '">' +
+              (r.result === "victory" ? "WIN" + (r.rank ? " " + r.rank : "") : "LOSS") + "</span>" +
+            '<span class="hist-main"><b>' + (r.squadNames.length ? r.squadNames.join(", ") : "Unknown squad") + "</b>" +
+              "<small>" + when + " · " + r.rounds + " rounds · " + fmtDuration(r.durationMs || 0) +
+              " · fell/ended in Phase " + (r.phaseReached || "?") + (muts.length ? " · " + muts.join(" + ") : "") +
+              (r.abandoned ? " · abandoned" : "") + "</small></span>" +
+            '<span class="hist-tokens">+' + (r.tokensEarned || 0) + " tok</span>";
+          hist.appendChild(item);
+        });
+      }
+    }
+
+    function exportData() {
+      tel("export", { events: telEvents.length });
+      var payload = {
+        game: "Project Haven — playable prototype",
+        exportedAt: new Date().toISOString(),
+        eventCount: telEvents.length,
+        events: telEvents
+      };
+      var blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement("a");
+      a.href = url;
+      a.download = "haven-playtest-data.json";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(function () { URL.revokeObjectURL(url); }, 3000);
+    }
+
+    /* ================= battle controls ================= */
+    function setSpeedUI(mult) {
+      document.querySelectorAll(".speed-group button").forEach(function (b) {
+        b.classList.toggle("on", Number(b.dataset.speed) === mult);
+      });
+    }
+    function bindBattleControls() {
+      document.querySelectorAll(".speed-group button").forEach(function (b) {
+        b.addEventListener("click", function () {
+          if (!B) return;
+          var mult = Number(b.dataset.speed);
+          B.speedMs = Math.round(340 / mult);
+          B.speedMult = mult;
+          setSpeedUI(mult);
+          tel("ui_interaction", { action: "speed_" + mult });
+        });
+      });
+      $("btn-pause").addEventListener("click", function () {
+        if (!B || B.over) return;
+        B.paused = !B.paused;
+        $("btn-pause").textContent = B.paused ? "Resume" : "Pause";
+        tel("ui_interaction", { action: B.paused ? "pause" : "resume", round: B.round });
+        if (!B.paused) scheduleNext(60);
+        else clearTimeout(B.timer);
+      });
+      $("btn-skip").addEventListener("click", function () {
+        if (!B || B.over) return;
+        tel("ui_interaction", { action: "skip", round: B.round });
+        B.skipping = true;
+        B.paused = false;
+        clearTimeout(B.timer);
+        var guard = 0;
+        while (!B.over && guard++ < 6000) stepOnce();
+        B.all.forEach(updateUnit);
+        updateBossChrome();
+        renderResults();
+      });
+      $("btn-flee").addEventListener("click", function () {
+        if (!B || B.over) return;
+        tel("ui_interaction", { action: "flee", round: B.round, phase: B.phase + 1 });
+        addLog("The squad abandons the court.", "phase");
+        endBattle(false, true);
+        renderResults();
+      });
+    }
+
+    /* ================= init ================= */
+    function goDraft() {
+      draftEnteredAt = Date.now();
+      showScreen("draft");
+      refreshDraft();
+    }
+    function init() {
+      telLoad();
+      tel("session_start", { screen: "draft" });
+      cloudStart();
+      renderRoster();
+      renderScout();
+      bindMutator("mut-glass", "glass");
+      bindMutator("mut-ash", "ash");
+      /* wrap mutator toggles with telemetry (bindMutator already flips state) */
+      ["mut-glass", "mut-ash"].forEach(function (id) {
+        $(id).addEventListener("click", function () {
+          tel("mutator_toggle", { mutator: id === "mut-glass" ? "Glass Court" : "Creeping Ash",
+            on: mutators[id === "mut-glass" ? "glass" : "ash"] });
+        });
+      });
+      $("btn-random").addEventListener("click", function () {
+        randomSquad();
+        tel("ui_interaction", { action: "random_squad", squad: selected.slice() });
+      });
+      $("btn-battle").addEventListener("click", function () {
+        if (!squadValid(selected)) return;
+        tel("draft_complete", { squad: selected.slice(),
+          squadNames: selected.map(function (id) { return HERO_BY_ID[id].name; }),
+          loadouts: loadoutSnapshot(selected),
+          draftMs: Date.now() - draftEnteredAt,
+          mutators: { glass: mutators.glass, ash: mutators.ash } });
+        startBattle(selected.slice());
+      });
+      bindBattleControls();
+      /* combat depth pass controls: auto-ult toggle, combo cash-in, focus chip */
+      syncAutoUltBtn();
+      $("btn-autoult").addEventListener("click", function () {
+        SETTINGS.autoUlt = !SETTINGS.autoUlt;
+        saveSettings();
+        syncAutoUltBtn();
+        tel("ui_interaction", { action: SETTINGS.autoUlt ? "autoult_on" : "autoult_off" });
+        if (B && !B.over) addLog(SETTINGS.autoUlt
+          ? "Auto-ult <b>on</b> — heroes fire charged ults into Exposed windows and the King's final half."
+          : "Auto-ult <b>off</b> — ultimates now fire only when you tap them.", "sys");
+      });
+      $("btn-combo").addEventListener("click", function () { SFX.ensure(); cashCombo(); });
+      $("focus-chip").addEventListener("click", function () {
+        if (!B || B.over) return;
+        clearFocus("chip");
+        addLog("Focus released — the squad returns to its priority list.", "sys");
+      });
+      /* loadout picker controls */
+      $("lo-close").addEventListener("click", closeLoadout);
+      $("loadout-modal").addEventListener("click", function (ev) {
+        if (ev.target === $("loadout-modal")) closeLoadout();
+      });
+      $("lo-remove").addEventListener("click", function () {
+        if (!loadoutHeroId) return;
+        var id = loadoutHeroId;
+        closeLoadout();
+        if (selected.indexOf(id) >= 0) togglePick(id);
+      });
+      document.addEventListener("keydown", function (ev) {
+        if (ev.key === "Escape" && !$("loadout-modal").hidden) closeLoadout();
+      });
+      $("btn-sound").addEventListener("click", toggleSound);
+      $("btn-sound-b").addEventListener("click", toggleSound);
+      syncSoundButtons();
+      /* audio may only start after a user gesture — arm it on the first one */
+      window.addEventListener("pointerdown", function () { SFX.ensure(); }, { passive: true });
+      window.addEventListener("keydown", function () { SFX.ensure(); });
+      $("btn-retry").addEventListener("click", function () {
+        if (!lastSquad) return;
+        tel("ui_interaction", { action: "retry" });
+        draftEnteredAt = Date.now();
+        startBattle(lastSquad.slice());
+      });
+      $("btn-redraft").addEventListener("click", function () {
+        tel("ui_interaction", { action: "redraft" });
+        goDraft();
+      });
+      $("btn-lab-open").addEventListener("click", function () {
+        tel("ui_interaction", { action: "lab_open" });
+        renderLab();
+        showScreen("lab");
+      });
+      $("btn-lab-open-results").addEventListener("click", function () {
+        tel("ui_interaction", { action: "lab_open" });
+        renderLab();
+        showScreen("lab");
+      });
+      $("btn-lab-back").addEventListener("click", function () { goDraft(); });
+      $("btn-export").addEventListener("click", exportData);
+      var clearBtn = $("btn-clear-data");
+      clearBtn.addEventListener("click", function () {
+        if (clearBtn.dataset.armed === "1") {
+          telEvents = [];
+          try { localStorage.removeItem(TEL_KEY); } catch (e) {}
+          tel("session_start", { screen: "lab", note: "log cleared" });
+          clearBtn.dataset.armed = "";
+          clearBtn.textContent = "Clear all data";
+          renderLab();
+        } else {
+          clearBtn.dataset.armed = "1";
+          clearBtn.textContent = "Tap again to confirm clear";
+          setTimeout(function () {
+            clearBtn.dataset.armed = "";
+            clearBtn.textContent = "Clear all data";
+          }, 3500);
+        }
+      });
+      document.addEventListener("visibilitychange", function () {
+        tel("visibility", { state: document.visibilityState, inBattle: !!(B && !B.over) });
+      });
+      window.addEventListener("beforeunload", function () {
+        tel("session_end", { battlesThisSession: telEvents.filter(function (e) { return e.type === "battle_end" && e.session === telSession; }).length });
+      });
+      showScreen("draft");
+    }
+    init();
+    </script>
+  </body>
+</html>
